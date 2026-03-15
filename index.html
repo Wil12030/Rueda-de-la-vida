@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rueda de la Vida</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#0a1417" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Rueda de la Vida" />
+  <meta name="description" content="Evalúa y mejora las 8 áreas de tu vida" />
+  <link rel="manifest" href="#" id="manifest-link" />
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#00FF00',
+            brandBlue: '#00BFFF',
+            appBg: '#0a1417',
+          },
+          fontFamily: {
+            sans: ['Space Grotesk', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Space Grotesk', sans-serif; background: #0a1417; color: #e2e8f0; margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0a1417; }
+    ::-webkit-scrollbar-thumb { background: #1e3a3a; border-radius: 2px; }
+
+    /* Bottom nav safe area */
+    .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 8px); }
+
+    /* Slider custom */
+    input[type=range] { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 3px; background: #1e293b; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #00FF00; cursor: pointer; box-shadow: 0 0 10px rgba(0,255,0,0.4); }
+    input[type=range]::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: #00FF00; cursor: pointer; border: none; box-shadow: 0 0 10px rgba(0,255,0,0.4); }
+
+    /* Screen transitions */
+    .screen { display: none; animation: fadeIn 0.25s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #00FF00; color: #0a1417; padding: 10px 22px; border-radius: 999px; font-weight: 600; font-size: 14px; opacity: 0; transition: all 0.3s ease; z-index: 9999; pointer-events: none; white-space: nowrap; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Modal */
+    #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    #modal-overlay.show { display: flex; }
+
+    /* Score badge animation */
+    .score-bar { transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    /* Light mode overrides */
+    html.light body { background: #f0f4f8; color: #1a202c; }
+    html.light .bg-slate-900 { background: #ffffff !important; }
+    html.light .bg-slate-800 { background: #e2e8f0 !important; }
+    html.light .bg-slate-700 { background: #cbd5e0 !important; }
+    html.light .text-slate-400 { color: #4a5568 !important; }
+    html.light .text-slate-300 { color: #2d3748 !important; }
+    html.light .border-slate-700 { border-color: #cbd5e0 !important; }
+
+    /* Nav active glow */
+    .nav-btn.active .nav-icon { color: #00FF00; filter: drop-shadow(0 0 6px rgba(0,255,0,0.6)); }
+    .nav-btn.active .nav-label { color: #00FF00; }
+  </style>
+</head>
+<body>
+
+<!-- ===================== TOAST ===================== -->
+<div id="toast">✓ Evaluación guardada</div>
+
+<!-- ===================== MODAL ===================== -->
+<div id="modal-overlay">
+  <div class="bg-slate-900 rounded-2xl p-6 mx-4 w-full max-w-sm border border-slate-700">
+    <h3 class="text-lg font-bold mb-2">¿Borrar todos los datos?</h3>
+    <p class="text-slate-400 text-sm mb-6">Esta acción es irreversible. Se eliminarán todas las evaluaciones guardadas.</p>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-slate-600 text-slate-300 font-medium">Cancelar</button>
+      <button onclick="confirmDeleteAll()" class="flex-1 py-3 rounded-xl bg-red-600 text-white font-medium">Borrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MAIN WRAPPER ===================== -->
+<div class="pb-20">
+
+  <!-- ========== SCREEN 1: INICIO ========== -->
+  <div id="screen-inicio" class="screen active px-4 pt-6">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 rounded-full border-2 border-brand flex items-center justify-center" style="border-style: dashed;">
+        <span class="material-symbols-outlined text-brand" style="font-size:20px;">incomplete_circle</span>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold leading-tight">Rueda de la Vida</h1>
+        <p class="text-slate-400 text-xs" id="header-year-label">Año actual</p>
+      </div>
+      <div class="ml-auto">
+        <span class="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full" id="header-version">v1.0</span>
+      </div>
+    </div>
+
+    <!-- Score General Card -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 rounded-full opacity-5" style="background: radial-gradient(circle, #00FF00, transparent); transform: translate(30%,-30%);"></div>
+      <p class="text-slate-400 text-sm mb-1">Puntaje General</p>
+      <div class="flex items-end gap-2 mb-3">
+        <span class="text-5xl font-bold text-brand" id="score-general">—</span>
+        <span class="text-slate-500 text-lg mb-1">/10</span>
+        <span class="ml-auto text-sm font-medium px-2 py-1 rounded-lg" id="score-tendencia"></span>
+      </div>
+      <div class="w-full bg-slate-800 rounded-full h-2">
+        <div class="h-2 rounded-full score-bar" id="score-bar" style="width:0%; background: linear-gradient(90deg, #00CC44, #00FF00);"></div>
+      </div>
+    </div>
+
+    <!-- CTA Nueva Evaluación -->
+    <button onclick="goTo('evaluar')" class="w-full py-4 rounded-2xl font-bold text-base mb-4 flex items-center justify-center gap-2" style="background: #00FF00; color: #0a1417;">
+      <span class="material-symbols-outlined" style="font-size:22px;">add_circle</span>
+      Nueva Evaluación
+    </button>
+
+    <!-- Mini Barras -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
+      <p class="text-slate-400 text-sm mb-4 font-medium">Scores por Categoría</p>
+      <div id="mini-bars" class="space-y-3"></div>
+    </div>
+
+    <!-- Enfoque Prioritario -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
+      <p class="text-slate-400 text-sm mb-4 font-medium flex items-center gap-2">
+        <span class="material-symbols-outlined text-yellow-400" style="font-size:18px;">priority_high</span>
+        Enfoque Prioritario
+      </p>
+      <div id="enfoque-prioritario" class="space-y-3"></div>
+    </div>
+
+  </div>
+
+  <!-- ========== SCREEN 2: EVALUACIÓN ========== -->
+  <div id="screen-evaluar" class="screen px-4 pt-6">
+    <div class="flex items-center gap-3 mb-6">
+      <span class="material-symbols-outlined text-brand">edit_note</span>
+      <h2 class="text-xl font-bold">Evaluación</h2>
+      <div class="ml-auto">
+        <select id="eval-year-select" onchange="loadEvalForm()" class="bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-medium outline-none">
+        </select>
+      </div>
+    </div>
+
+    <div id="eval-cards" class="space-y-4"></div>
+
+    <button onclick="saveEvaluation()" class="w-full py-4 rounded-2xl font-bold text-base mt-6 mb-4 flex items-center justify-center gap-2" style="background: #00FF00; color: #0a1417;">
+      <span class="material-symbols-outlined" style="font-size:22px;">save</span>
+      Guardar Evaluación
+    </button>
+  </div>
+
+  <!-- ========== SCREEN 3: ANÁLISIS ========== -->
+  <div id="screen-analisis" class="screen px-4 pt-6">
+    <div class="flex items-center gap-3 mb-6">
+      <span class="material-symbols-outlined text-brand">analytics</span>
+      <h2 class="text-xl font-bold">Análisis</h2>
+    </div>
+
+    <!-- Radar Comparativo -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
+      <p class="text-slate-400 text-sm mb-3 font-medium">Radar Comparativo</p>
+      <div class="flex gap-3 mb-4">
+        <div class="flex-1">
+          <label class="text-xs text-slate-500 mb-1 block">Año A</label>
+          <select id="radar-year-a" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+        </div>
+        <div class="flex-1">
+          <label class="text-xs text-slate-500 mb-1 block">Año B</label>
+          <select id="radar-year-b" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+        </div>
+      </div>
+      <div class="relative" style="height: 280px;">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Tendencia por Categoría -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
+      <p class="text-slate-400 text-sm mb-3 font-medium">Tendencia por Categoría</p>
+      <select id="trend-cat-select" onchange="renderTrend()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none mb-4"></select>
+      <div class="relative" style="height: 220px;">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SCREEN 4: AJUSTES ========== -->
+  <div id="screen-ajustes" class="screen px-4 pt-6">
+    <div class="flex items-center gap-3 mb-6">
+      <span class="material-symbols-outlined text-brand">settings</span>
+      <h2 class="text-xl font-bold">Ajustes</h2>
+    </div>
+
+    <!-- Tema -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
+      <p class="text-slate-400 text-xs uppercase tracking-widest mb-4 font-medium">Apariencia</p>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-slate-400">dark_mode</span>
+          <span class="font-medium">Modo Oscuro</span>
+        </div>
+        <button id="theme-toggle" onclick="toggleTheme()" class="w-14 h-7 rounded-full relative transition-colors duration-300 bg-brand">
+          <div id="theme-thumb" class="w-5 h-5 rounded-full bg-slate-900 absolute top-1 transition-transform duration-300 translate-x-8"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Datos -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
+      <p class="text-slate-400 text-xs uppercase tracking-widest mb-4 font-medium">Datos</p>
+      <div class="space-y-3">
+        <button onclick="exportData()" class="w-full py-3 rounded-xl border border-slate-700 text-slate-300 font-medium flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined" style="font-size:20px;">download</span>
+          Exportar datos (JSON)
+        </button>
+        <label class="w-full py-3 rounded-xl border border-slate-700 text-slate-300 font-medium flex items-center justify-center gap-2 cursor-pointer">
+          <span class="material-symbols-outlined" style="font-size:20px;">upload</span>
+          Importar datos (JSON)
+          <input type="file" accept=".json" class="hidden" onchange="importData(event)" />
+        </label>
+        <button onclick="openModal()" class="w-full py-3 rounded-xl border border-red-800 text-red-400 font-medium flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined" style="font-size:20px;">delete_forever</span>
+          Borrar todos los datos
+        </button>
+      </div>
+    </div>
+
+    <!-- Acerca de -->
+    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
+      <p class="text-slate-400 text-xs uppercase tracking-widest mb-4 font-medium">Acerca de</p>
+      <div class="space-y-2 text-sm text-slate-400">
+        <p><span class="text-slate-300 font-medium">Versión:</span> 1.0.0</p>
+        <p><span class="text-slate-300 font-medium">Tecnología:</span> HTML + Tailwind + Chart.js</p>
+      </div>
+      <div class="mt-4 p-4 bg-slate-800 rounded-xl">
+        <p class="text-sm font-medium mb-2 flex items-center gap-2">
+          <span class="material-symbols-outlined text-brand" style="font-size:18px;">install_mobile</span>
+          Instalar como PWA
+        </p>
+        <ol class="text-xs text-slate-400 space-y-1 list-decimal list-inside">
+          <li>Abre esta página en Chrome o Safari</li>
+          <li>Toca el menú de compartir (⎙ o ⋮)</li>
+          <li>Selecciona "Añadir a pantalla de inicio"</li>
+          <li>Confirma y listo — ¡ya tienes la app instalada!</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== BOTTOM NAV ===================== -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex z-50">
+  <button class="nav-btn active flex-1 flex flex-col items-center py-3 gap-1" onclick="goTo('inicio')">
+    <span class="nav-icon material-symbols-outlined" style="font-size:24px;">home</span>
+    <span class="nav-label text-xs text-slate-400">Inicio</span>
+  </button>
+  <button class="nav-btn flex-1 flex flex-col items-center py-3 gap-1" onclick="goTo('evaluar')">
+    <span class="nav-icon material-symbols-outlined" style="font-size:24px;">edit_note</span>
+    <span class="nav-label text-xs text-slate-400">Evaluar</span>
+  </button>
+  <button class="nav-btn flex-1 flex flex-col items-center py-3 gap-1" onclick="goTo('analisis')">
+    <span class="nav-icon material-symbols-outlined" style="font-size:24px;">analytics</span>
+    <span class="nav-label text-xs text-slate-400">Análisis</span>
+  </button>
+  <button class="nav-btn flex-1 flex flex-col items-center py-3 gap-1" onclick="goTo('ajustes')">
+    <span class="nav-icon material-symbols-outlined" style="font-size:24px;">settings</span>
+    <span class="nav-label text-xs text-slate-400">Ajustes</span>
+  </button>
+</nav>
+
+<!-- ===================== JAVASCRIPT ===================== -->
+<script>
+
+// ── CONFIG ──────────────────────────────────────────────
+const CATEGORIAS = [
+  { id: "amor",       label: "Amor / Pareja",          icon: "favorite",         placeholder: "Ej: Mejorar comunicación, planear viaje..." },
+  { id: "finanzas",   label: "Finanzas / Inversiones",  icon: "payments",         placeholder: "Ej: Abrir portafolio, reducir deudas..." },
+  { id: "hobbies",    label: "Hobbies",                 icon: "sports_esports",   placeholder: "Ej: Retomar guitarra, leer 12 libros..." },
+  { id: "desarrollo", label: "Desarrollo Personal",     icon: "self_improvement", placeholder: "Ej: Curso de Python, meditación diaria..." },
+  { id: "hogar",      label: "Hogar / Familia",         icon: "home",             placeholder: "Ej: Mejorar hogar, tiempo de calidad..." },
+  { id: "trabajo",    label: "Trabajo / Carrera",       icon: "work",             placeholder: "Ej: Ascenso, nuevo cliente, delegar más..." },
+  { id: "relaciones", label: "Relaciones Personales",   icon: "group",            placeholder: "Ej: Reconectar con amigos, networking..." },
+  { id: "salud",      label: "Salud",                   icon: "fitness_center",   placeholder: "Ej: Ayuno intermitente, correr 3x semana..." }
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 4 + i);
+
+let radarChartInstance = null;
+let trendChartInstance = null;
+
+// ── DATA HELPERS ─────────────────────────────────────────
+function getData() {
+  try { return JSON.parse(localStorage.getItem('rueda_vida_data') || '{}'); }
+  catch(e) { return {}; }
+}
+function setData(d) {
+  localStorage.setItem('rueda_vida_data', JSON.stringify(d));
+}
+function getYearData(year) {
+  return getData()[year] || {};
+}
+
+// ── NAVIGATION ────────────────────────────────────────────
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById('screen-' + screen).classList.add('active');
+  const idx = ['inicio','evaluar','analisis','ajustes'].indexOf(screen);
+  document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+
+  if (screen === 'inicio') renderDashboard();
+  if (screen === 'evaluar') initEvalForm();
+  if (screen === 'analisis') initAnalisis();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderDashboard() {
+  const yearData = getYearData(CURRENT_YEAR);
+  const scores = CATEGORIAS.map(c => (yearData[c.id] ? yearData[c.id].score : 0));
+  const hasData = scores.some(s => s > 0);
+
+  // Header year
+  document.getElementById('header-year-label').textContent = CURRENT_YEAR;
+
+  // Score general
+  const avg = hasData
+    ? (scores.reduce((a, b) => a + b, 0) / scores.filter(s => s > 0).length).toFixed(1)
+    : '—';
+
+  document.getElementById('score-general').textContent = avg;
+  document.getElementById('score-bar').style.width = hasData ? (parseFloat(avg) * 10) + '%' : '0%';
+
+  // Tendencia vs año anterior
+  const prevData = getYearData(CURRENT_YEAR - 1);
+  const prevScores = CATEGORIAS.map(c => (prevData[c.id] ? prevData[c.id].score : 0)).filter(s => s > 0);
+  const tendEl = document.getElementById('score-tendencia');
+  if (hasData && prevScores.length > 0) {
+    const prevAvg = prevScores.reduce((a, b) => a + b, 0) / prevScores.length;
+    const diff = (parseFloat(avg) - prevAvg).toFixed(1);
+    const up = diff >= 0;
+    tendEl.textContent = (up ? '▲ +' : '▼ ') + diff + ' vs ' + (CURRENT_YEAR - 1);
+    tendEl.className = 'ml-auto text-sm font-medium px-2 py-1 rounded-lg ' + (up ? 'text-green-400 bg-green-900/30' : 'text-red-400 bg-red-900/30');
+  } else {
+    tendEl.textContent = '';
+  }
+
+  // Mini barras
+  const barsEl = document.getElementById('mini-bars');
+  barsEl.innerHTML = '';
+  CATEGORIAS.forEach((cat, i) => {
+    const score = scores[i];
+    const pct = (score / 10) * 100;
+    barsEl.innerHTML += `
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-brand" style="font-size:16px;">${cat.icon}</span>
+            <span class="text-xs text-slate-300">${cat.label}</span>
+          </div>
+          <span class="text-xs font-bold ${score > 0 ? 'text-brand' : 'text-slate-600'}">${score > 0 ? score : '—'}</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-1.5">
+          <div class="h-1.5 rounded-full score-bar" style="width:${pct}%; background: linear-gradient(90deg, #00CC44, #00FF00);"></div>
+        </div>
+      </div>`;
+  });
+  if (!hasData) {
+    barsEl.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Sin evaluación para ' + CURRENT_YEAR + '</p>';
+  }
+
+  // Enfoque prioritario (3 menores)
+  const enfEl = document.getElementById('enfoque-prioritario');
+  enfEl.innerHTML = '';
+  if (hasData) {
+    const sorted = CATEGORIAS
+      .map((c, i) => ({ ...c, score: scores[i] }))
+      .filter(c => c.score > 0)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3);
+
+    sorted.forEach(cat => {
+      const nota = yearData[cat.id]?.notas || '';
+      enfEl.innerHTML += `
+        <div class="flex items-start gap-3 p-3 bg-slate-800 rounded-xl">
+          <span class="material-symbols-outlined text-yellow-400 mt-0.5" style="font-size:20px;">${cat.icon}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium">${cat.label}</span>
+              <span class="text-sm font-bold text-red-400">${cat.score}/10</span>
+            </div>
+            ${nota ? `<p class="text-xs text-slate-400 mt-0.5 truncate">${nota}</p>` : ''}
+          </div>
+        </div>`;
+    });
+  } else {
+    enfEl.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Completa una evaluación primero</p>';
+  }
+}
+
+// ── EVALUACIÓN ────────────────────────────────────────────
+function initEvalForm() {
+  // Populate year selector
+  const sel = document.getElementById('eval-year-select');
+  sel.innerHTML = YEARS.map(y => `<option value="${y}" ${y === CURRENT_YEAR ? 'selected' : ''}>${y}</option>`).join('');
+  loadEvalForm();
+}
+
+function loadEvalForm() {
+  const year = parseInt(document.getElementById('eval-year-select').value);
+  const yearData = getYearData(year);
+  const container = document.getElementById('eval-cards');
+  container.innerHTML = '';
+
+  CATEGORIAS.forEach(cat => {
+    const saved = yearData[cat.id] || { score: 5, notas: '' };
+    container.innerHTML += `
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+            <span class="material-symbols-outlined text-brand" style="font-size:22px;">${cat.icon}</span>
+          </div>
+          <div>
+            <p class="font-semibold">${cat.label}</p>
+            <p class="text-xs text-slate-500">Puntaje actual: <span id="score-display-${cat.id}" class="text-brand font-bold">${saved.score}</span>/10</p>
+          </div>
+        </div>
+        <div class="mb-4">
+          <div class="flex justify-between text-xs text-slate-600 mb-2">
+            <span>1 — Muy bajo</span>
+            <span>10 — Excelente</span>
+          </div>
+          <input type="range" min="1" max="10" value="${saved.score}"
+            id="slider-${cat.id}"
+            oninput="updateScore('${cat.id}', this.value)"
+            class="w-full" />
+          <div class="flex justify-between mt-2">
+            ${Array.from({length:10},(_,i)=>`<span class="text-xs ${(i+1)==saved.score?'text-brand font-bold':'text-slate-600'}" id="tick-${cat.id}-${i+1}">${i+1}</span>`).join('')}
+          </div>
+        </div>
+        <textarea id="notas-${cat.id}"
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-slate-300 outline-none resize-none"
+          rows="2" placeholder="${cat.placeholder}">${saved.notas}</textarea>
+      </div>`;
+  });
+}
+
+function updateScore(catId, val) {
+  document.getElementById('score-display-' + catId).textContent = val;
+  for (let i = 1; i <= 10; i++) {
+    const tick = document.getElementById(`tick-${catId}-${i}`);
+    if (tick) tick.className = `text-xs ${i == val ? 'text-brand font-bold' : 'text-slate-600'}`;
+  }
+}
+
+function saveEvaluation() {
+  const year = parseInt(document.getElementById('eval-year-select').value);
+  const data = getData();
+  if (!data[year]) data[year] = {};
+
+  CATEGORIAS.forEach(cat => {
+    data[year][cat.id] = {
+      score: parseInt(document.getElementById('slider-' + cat.id).value),
+      notas: document.getElementById('notas-' + cat.id).value.trim()
+    };
+  });
+
+  setData(data);
+  showToast('✓ Evaluación ' + year + ' guardada');
+}
+
+// ── ANÁLISIS ──────────────────────────────────────────────
+function initAnalisis() {
+  const data = getData();
+  const yearsWithData = YEARS.filter(y => data[y] && Object.keys(data[y]).length > 0);
+  const allYears = yearsWithData.length > 0 ? yearsWithData : YEARS;
+
+  // Radar selectors
+  const ra = document.getElementById('radar-year-a');
+  const rb = document.getElementById('radar-year-b');
+  ra.innerHTML = allYears.map((y,i) => `<option value="${y}" ${i===allYears.length-1?'selected':''}>${y}</option>`).join('');
+  rb.innerHTML = allYears.map((y,i) => `<option value="${y}" ${i===Math.max(0,allYears.length-2)?'selected':''}>${y}</option>`).join('');
+
+  // Trend category selector
+  const tsel = document.getElementById('trend-cat-select');
+  tsel.innerHTML = CATEGORIAS.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+
+  setTimeout(() => { renderRadar(); renderTrend(); }, 100);
+}
+
+function renderRadar() {
+  const yearA = parseInt(document.getElementById('radar-year-a').value);
+  const yearB = parseInt(document.getElementById('radar-year-b').value);
+  const dataA = getYearData(yearA);
+  const dataB = getYearData(yearB);
+
+  const labels = CATEGORIAS.map(c => c.label.split(' / ')[0]);
+  const scoresA = CATEGORIAS.map(c => dataA[c.id]?.score || 0);
+  const scoresB = CATEGORIAS.map(c => dataB[c.id]?.score || 0);
+
+  if (radarChartInstance) radarChartInstance.destroy();
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  radarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [
+        { label: String(yearA), data: scoresA, borderColor: '#00FF00', backgroundColor: 'rgba(0,255,0,0.15)', borderWidth: 2, pointBackgroundColor: '#00FF00', pointRadius: 4 },
+        { label: String(yearB), data: scoresB, borderColor: '#00BFFF', backgroundColor: 'rgba(0,191,255,0.15)', borderWidth: 2, pointBackgroundColor: '#00BFFF', pointRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { min: 0, max: 10, ticks: { stepSize: 2, color: '#475569', font: { size: 10 } }, grid: { color: '#1e293b' }, pointLabels: { color: '#94a3b8', font: { size: 10 } }, angleLines: { color: '#1e293b' } } },
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } }
+    }
+  });
+}
+
+function renderTrend() {
+  const catId = document.getElementById('trend-cat-select').value;
+  const data = getData();
+  const labels = YEARS.map(String);
+  const scores = YEARS.map(y => data[y]?.[catId]?.score ?? null);
+  const notas = YEARS.map(y => data[y]?.[catId]?.notas || '');
+
+  if (trendChartInstance) trendChartInstance.destroy();
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  trendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: CATEGORIAS.find(c => c.id === catId)?.label,
+        data: scores,
+        borderColor: '#00FF00',
+        backgroundColor: 'rgba(0,255,0,0.08)',
+        borderWidth: 2.5,
+        pointBackgroundColor: scores.map(s => s !== null ? '#00FF00' : 'transparent'),
+        pointRadius: 6,
+        tension: 0.4,
+        fill: true,
+        spanGaps: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { min: 0, max: 10, ticks: { stepSize: 2, color: '#475569' }, grid: { color: '#1e293b' } },
+        x: { ticks: { color: '#475569' }, grid: { color: '#1e293b' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => notas[ctx.dataIndex] ? '📝 ' + notas[ctx.dataIndex] : ''
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── AJUSTES ───────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.toggle('dark', !isDark);
+  html.classList.toggle('light', isDark);
+  const thumb = document.getElementById('theme-thumb');
+  const btn = document.getElementById('theme-toggle');
+  if (isDark) { thumb.style.transform = 'translateX(4px)'; btn.style.background = '#334155'; }
+  else { thumb.style.transform = 'translateX(32px)'; btn.style.background = '#00FF00'; }
+  localStorage.setItem('rueda_tema', isDark ? 'light' : 'dark');
+}
+
+function exportData() {
+  const data = getData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'rueda_vida_backup.json';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('📥 Datos exportados');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      setData(data);
+      showToast('✓ Datos importados correctamente');
+    } catch { showToast('⚠️ Archivo inválido'); }
+  };
+  reader.readAsText(file);
+}
+
+function openModal() { document.getElementById('modal-overlay').classList.add('show'); }
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+function confirmDeleteAll() {
+  localStorage.removeItem('rueda_vida_data');
+  closeModal();
+  showToast('🗑️ Datos eliminados');
+  renderDashboard();
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── PWA: MANIFEST + SERVICE WORKER ────────────────────────
+const manifestData = {
+  name: "Rueda de la Vida",
+  short_name: "RuedaVida",
+  description: "Evalúa y mejora las 8 áreas de tu vida",
+  start_url: "./",
+  display: "standalone",
+  orientation: "portrait",
+  theme_color: "#0a1417",
+  background_color: "#0a1417",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Ccircle cx='96' cy='96' r='80' fill='%230a1417' stroke='%2300FF00' stroke-width='8' stroke-dasharray='40 20'/%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='220' fill='%230a1417' stroke='%2300FF00' stroke-width='16' stroke-dasharray='80 40'/%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
+  ]
+};
+
+const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+const manifestURL = URL.createObjectURL(manifestBlob);
+document.getElementById('manifest-link').href = manifestURL;
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  const swCode = `
+const CACHE = 'rueda-vida-v1';
+self.addEventListener('install', e => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }))
+  );
+});`;
+  const swBlob = new Blob([swCode], { type: 'application/javascript' });
+  const swURL = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL).catch(() => {});
+}
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore theme
+  const tema = localStorage.getItem('rueda_tema') || 'dark';
+  document.documentElement.classList.toggle('dark', tema === 'dark');
+  document.documentElement.classList.toggle('light', tema === 'light');
+  if (tema === 'light') {
+    document.getElementById('theme-thumb').style.transform = 'translateX(4px)';
+    document.getElementById('theme-toggle').style.background = '#334155';
+  }
+
+  renderDashboard();
+});
+
+</script>
+
+<!--
+=================================================================
+INSTRUCCIONES DE DESPLIEGUE EN GITHUB PAGES
+=================================================================
+
+1. GUARDAR EL ARCHIVO
+   - Guarda este archivo como: index.html
+
+2. SUBIR A GITHUB PAGES
+   a. Ve a https://github.com y crea un repositorio nuevo
+      (ej: "rueda-de-la-vida"), márcalo como Público
+   b. En el repositorio, haz clic en "Add file" → "Upload files"
+   c. Sube el archivo index.html
+   d. Haz commit: "Initial commit"
+   e. Ve a Settings → Pages → Source: "Deploy from a branch"
+   f. Branch: main / root → Save
+   g. Espera ~2 minutos y GitHub te mostrará la URL:
+      https://TU_USUARIO.github.io/rueda-de-la-vida/
+
+3. COMPARTIR
+   - Copia esa URL y compártela por WhatsApp, email, etc.
+   - En el celular: abre la URL en Chrome/Safari y
+     usa "Añadir a pantalla de inicio" para instalar como app.
+
+=================================================================
+-->
+
+</body>
+</html>
