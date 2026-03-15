@@ -182,15 +182,21 @@
   </div>
 
   <!-- ========== SCREEN 3: ANÁLISIS ========== -->
-  <div id="screen-analisis" class="screen px-4 pt-6">
-    <div class="flex items-center gap-3 mb-6">
-      <span class="material-symbols-outlined text-brand">analytics</span>
-      <h2 class="text-xl font-bold">Análisis</h2>
+  <div id="screen-analisis" class="screen pt-0">
+
+    <!-- Sub-tabs -->
+    <div class="flex border-b border-slate-800 bg-slate-900 sticky top-0 z-10">
+      <button id="tab-radar-btn" onclick="switchAnalysisTab('radar')" class="flex-1 py-4 text-sm font-semibold text-brand border-b-2 border-brand flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined" style="font-size:18px;">radar</span> Radar
+      </button>
+      <button id="tab-trend-btn" onclick="switchAnalysisTab('trend')" class="flex-1 py-4 text-sm font-semibold text-slate-400 border-b-2 border-transparent flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined" style="font-size:18px;">show_chart</span> Tendencia
+      </button>
     </div>
 
-    <!-- Radar Comparativo -->
-    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
-      <p class="text-slate-400 text-sm mb-3 font-medium">Radar Comparativo</p>
+    <!-- TAB: RADAR -->
+    <div id="tab-radar" class="px-4 pt-4">
+      <!-- Year selectors inline -->
       <div class="flex gap-3 mb-4">
         <div class="flex-1">
           <label class="text-xs text-slate-500 mb-1 block">Año A</label>
@@ -201,19 +207,49 @@
           <select id="radar-year-b" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
         </div>
       </div>
-      <div class="relative" style="height: 280px;">
-        <canvas id="radarChart"></canvas>
+
+      <!-- Legend -->
+      <div class="flex gap-4 mb-3 justify-center">
+        <div class="flex items-center gap-2"><span class="w-4 h-1 rounded-full inline-block" style="background:#00FF00;"></span><span id="legend-a" class="text-xs text-slate-300">Actual</span></div>
+        <div class="flex items-center gap-2"><span class="w-4 h-1 rounded-full inline-block" style="background:#00BFFF;"></span><span id="legend-b" class="text-xs text-slate-300">Anterior</span></div>
+      </div>
+
+      <!-- BIG Radar -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 mb-4">
+        <div class="relative" style="height: 340px;">
+          <canvas id="radarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Mayores Cambios -->
+      <div class="mb-4">
+        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined text-brand" style="font-size:20px;">swap_vert</span>
+          Mayores Cambios
+        </h3>
+        <div id="cambios-list" class="space-y-3"></div>
       </div>
     </div>
 
-    <!-- Tendencia por Categoría -->
-    <div class="bg-slate-900 rounded-2xl p-5 mb-4 border border-slate-800">
-      <p class="text-slate-400 text-sm mb-3 font-medium">Tendencia por Categoría</p>
+    <!-- TAB: TENDENCIA -->
+    <div id="tab-trend" class="px-4 pt-4" style="display:none;">
+      <p class="text-slate-400 text-sm mb-3 font-medium">Evolución por Categoría</p>
       <select id="trend-cat-select" onchange="renderTrend()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none mb-4"></select>
-      <div class="relative" style="height: 220px;">
-        <canvas id="trendChart"></canvas>
+
+      <!-- Big trend chart -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 mb-4">
+        <div class="relative" style="height: 300px;">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Score table -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 mb-4">
+        <p class="text-slate-400 text-xs uppercase tracking-widest mb-3 font-medium">Detalle por Año</p>
+        <div id="trend-table" class="space-y-2"></div>
       </div>
     </div>
+
   </div>
 
   <!-- ========== SCREEN 4: AJUSTES ========== -->
@@ -504,22 +540,31 @@ function saveEvaluation() {
 }
 
 // ── ANÁLISIS ──────────────────────────────────────────────
+function switchAnalysisTab(tab) {
+  const isRadar = tab === 'radar';
+  document.getElementById('tab-radar').style.display = isRadar ? 'block' : 'none';
+  document.getElementById('tab-trend').style.display = isRadar ? 'none' : 'block';
+  document.getElementById('tab-radar-btn').className = `flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 ${isRadar ? 'text-brand border-brand' : 'text-slate-400 border-transparent'}`;
+  document.getElementById('tab-trend-btn').className = `flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 ${!isRadar ? 'text-brand border-brand' : 'text-slate-400 border-transparent'}`;
+  if (!isRadar) setTimeout(renderTrend, 80);
+  else setTimeout(renderRadar, 80);
+}
+
 function initAnalisis() {
   const data = getData();
   const yearsWithData = YEARS.filter(y => data[y] && Object.keys(data[y]).length > 0);
   const allYears = yearsWithData.length > 0 ? yearsWithData : YEARS;
 
-  // Radar selectors
   const ra = document.getElementById('radar-year-a');
   const rb = document.getElementById('radar-year-b');
   ra.innerHTML = allYears.map((y,i) => `<option value="${y}" ${i===allYears.length-1?'selected':''}>${y}</option>`).join('');
   rb.innerHTML = allYears.map((y,i) => `<option value="${y}" ${i===Math.max(0,allYears.length-2)?'selected':''}>${y}</option>`).join('');
 
-  // Trend category selector
   const tsel = document.getElementById('trend-cat-select');
   tsel.innerHTML = CATEGORIAS.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 
-  setTimeout(() => { renderRadar(); renderTrend(); }, 100);
+  // reset to radar tab
+  switchAnalysisTab('radar');
 }
 
 function renderRadar() {
@@ -527,6 +572,9 @@ function renderRadar() {
   const yearB = parseInt(document.getElementById('radar-year-b').value);
   const dataA = getYearData(yearA);
   const dataB = getYearData(yearB);
+
+  document.getElementById('legend-a').textContent = yearA;
+  document.getElementById('legend-b').textContent = yearB;
 
   const labels = CATEGORIAS.map(c => c.label.split(' / ')[0]);
   const scoresA = CATEGORIAS.map(c => dataA[c.id]?.score || 0);
@@ -539,16 +587,72 @@ function renderRadar() {
     data: {
       labels,
       datasets: [
-        { label: String(yearA), data: scoresA, borderColor: '#00FF00', backgroundColor: 'rgba(0,255,0,0.15)', borderWidth: 2, pointBackgroundColor: '#00FF00', pointRadius: 4 },
-        { label: String(yearB), data: scoresB, borderColor: '#00BFFF', backgroundColor: 'rgba(0,191,255,0.15)', borderWidth: 2, pointBackgroundColor: '#00BFFF', pointRadius: 4 }
+        {
+          label: String(yearA), data: scoresA,
+          borderColor: '#00FF00', backgroundColor: 'rgba(0,255,0,0.18)',
+          borderWidth: 2.5, pointBackgroundColor: '#00FF00',
+          pointRadius: 5, pointHoverRadius: 7
+        },
+        {
+          label: String(yearB), data: scoresB,
+          borderColor: '#00BFFF', backgroundColor: 'rgba(0,191,255,0.12)',
+          borderWidth: 2, pointBackgroundColor: '#00BFFF',
+          pointRadius: 4, pointHoverRadius: 6
+        }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      scales: { r: { min: 0, max: 10, ticks: { stepSize: 2, color: '#475569', font: { size: 10 } }, grid: { color: '#1e293b' }, pointLabels: { color: '#94a3b8', font: { size: 10 } }, angleLines: { color: '#1e293b' } } },
-      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } }
+      scales: {
+        r: {
+          min: 0, max: 10,
+          ticks: { stepSize: 2, color: '#334155', font: { size: 9 }, backdropColor: 'transparent' },
+          grid: { color: 'rgba(148,163,184,0.1)' },
+          pointLabels: { color: '#94a3b8', font: { size: 11, weight: '500' } },
+          angleLines: { color: 'rgba(148,163,184,0.15)' }
+        }
+      },
+      plugins: { legend: { display: false } }
     }
   });
+
+  // Mayores cambios
+  const cambios = CATEGORIAS.map(cat => ({
+    ...cat,
+    scoreA: dataA[cat.id]?.score || 0,
+    scoreB: dataB[cat.id]?.score || 0,
+    diff: (dataA[cat.id]?.score || 0) - (dataB[cat.id]?.score || 0)
+  })).filter(c => c.scoreA > 0 || c.scoreB > 0)
+    .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
+    .slice(0, 4);
+
+  const cambiosEl = document.getElementById('cambios-list');
+  if (cambios.length === 0) {
+    cambiosEl.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Ingresa evaluaciones para ver cambios</p>';
+    return;
+  }
+  cambiosEl.innerHTML = cambios.map(c => {
+    const up = c.diff > 0;
+    const same = c.diff === 0;
+    const label = same ? 'SIN CAMBIO' : (up ? 'MEJORA' : 'ATENCIÓN');
+    const color = same ? 'text-slate-400' : (up ? 'text-brand' : 'text-red-400');
+    const bgIcon = same ? 'bg-slate-800' : (up ? 'bg-green-900/40' : 'bg-red-900/30');
+    const diffStr = same ? '=' : ((up ? '+' : '') + c.diff.toFixed(1));
+    return `
+      <div class="flex items-center gap-3 p-3 bg-slate-900 rounded-xl border border-slate-800">
+        <div class="w-11 h-11 rounded-xl ${bgIcon} flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined ${color}" style="font-size:22px;">${c.icon}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-sm">${c.label}</p>
+          <p class="text-xs text-slate-500">${c.scoreB} → ${c.scoreA}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-lg font-bold ${color}">${diffStr}</p>
+          <p class="text-xs ${color} opacity-70">${label}</p>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 function renderTrend() {
@@ -557,22 +661,32 @@ function renderTrend() {
   const labels = YEARS.map(String);
   const scores = YEARS.map(y => data[y]?.[catId]?.score ?? null);
   const notas = YEARS.map(y => data[y]?.[catId]?.notas || '');
+  const cat = CATEGORIAS.find(c => c.id === catId);
 
   if (trendChartInstance) trendChartInstance.destroy();
   const ctx = document.getElementById('trendChart').getContext('2d');
+
+  // gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(0,255,0,0.25)');
+  gradient.addColorStop(1, 'rgba(0,255,0,0.0)');
+
   trendChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
       datasets: [{
-        label: CATEGORIAS.find(c => c.id === catId)?.label,
+        label: cat?.label,
         data: scores,
         borderColor: '#00FF00',
-        backgroundColor: 'rgba(0,255,0,0.08)',
-        borderWidth: 2.5,
-        pointBackgroundColor: scores.map(s => s !== null ? '#00FF00' : 'transparent'),
-        pointRadius: 6,
-        tension: 0.4,
+        backgroundColor: gradient,
+        borderWidth: 3,
+        pointBackgroundColor: '#00FF00',
+        pointBorderColor: '#0a1417',
+        pointBorderWidth: 2,
+        pointRadius: scores.map(s => s !== null ? 7 : 0),
+        pointHoverRadius: 9,
+        tension: 0.35,
         fill: true,
         spanGaps: false
       }]
@@ -580,19 +694,43 @@ function renderTrend() {
     options: {
       responsive: true, maintainAspectRatio: false,
       scales: {
-        y: { min: 0, max: 10, ticks: { stepSize: 2, color: '#475569' }, grid: { color: '#1e293b' } },
-        x: { ticks: { color: '#475569' }, grid: { color: '#1e293b' } }
+        y: { min: 0, max: 10, ticks: { stepSize: 2, color: '#475569', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.08)' }, border: { display: false } },
+        x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false }, border: { display: false } }
       },
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: '#1e293b',
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          borderColor: '#334155',
+          borderWidth: 1,
+          padding: 10,
           callbacks: {
+            title: (items) => items[0].label,
+            label: (ctx) => ' Score: ' + (ctx.raw ?? '—') + '/10',
             afterLabel: (ctx) => notas[ctx.dataIndex] ? '📝 ' + notas[ctx.dataIndex] : ''
           }
         }
       }
     }
   });
+
+  // Trend table
+  const tableEl = document.getElementById('trend-table');
+  tableEl.innerHTML = YEARS.map(y => {
+    const s = data[y]?.[catId]?.score;
+    const n = data[y]?.[catId]?.notas || '';
+    if (!s) return `<div class="flex items-center justify-between py-2 border-b border-slate-800"><span class="text-slate-600 text-sm">${y}</span><span class="text-slate-600 text-sm">Sin datos</span></div>`;
+    return `
+      <div class="py-2 border-b border-slate-800 last:border-0">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium">${y}</span>
+          <span class="text-brand font-bold text-sm">${s}/10</span>
+        </div>
+        ${n ? `<p class="text-xs text-slate-500 truncate">${n}</p>` : ''}
+      </div>`;
+  }).join('');
 }
 
 // ── AJUSTES ───────────────────────────────────────────────
