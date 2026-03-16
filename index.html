@@ -212,13 +212,26 @@
 
   <!-- ========== SCREEN 2: EVALUACIÓN ========== -->
   <div id="screen-evaluar" class="screen px-4 pt-6">
-    <div class="flex items-center gap-3 mb-6">
+    <div class="flex items-center gap-3 mb-4">
       <span class="material-symbols-outlined text-brand">edit_note</span>
       <h2 class="text-xl font-bold">Evaluación</h2>
       <div class="ml-auto">
         <select id="eval-year-select" onchange="loadEvalForm()" class="bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-medium outline-none">
         </select>
       </div>
+    </div>
+
+    <!-- Period tabs -->
+    <div class="flex gap-1 bg-slate-800 rounded-xl p-1 mb-4">
+      <button id="ptab-trimestral" onclick="switchPeriodTab('trimestral')" class="flex-1 py-2 rounded-lg text-xs font-semibold bg-brand text-slate-900">Trimestral</button>
+      <button id="ptab-semestral" onclick="switchPeriodTab('semestral')" class="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400">Semestral</button>
+      <button id="ptab-anual" onclick="switchPeriodTab('anual')" class="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400">Anual</button>
+    </div>
+
+    <!-- Period selector -->
+    <div class="mb-4">
+      <select id="eval-period-select" onchange="loadEvalForm()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-medium outline-none">
+      </select>
     </div>
 
     <div id="eval-cards" class="space-y-4"></div>
@@ -244,38 +257,45 @@
 
     <!-- TAB: RADAR -->
     <div id="tab-radar" class="px-4 pt-4">
-      <!-- Year selectors inline -->
-      <div class="flex gap-3 mb-4">
+
+      <!-- Comparison mode toggle -->
+      <div class="flex gap-1 bg-slate-800 rounded-xl p-1 mb-4">
+        <button id="cmp-same-btn" onclick="switchCmpMode('same')" class="flex-1 py-2 rounded-lg text-xs font-semibold bg-brand text-slate-900">Mismo año</button>
+        <button id="cmp-cross-btn" onclick="switchCmpMode('cross')" class="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400">Entre años</button>
+      </div>
+
+      <!-- Selectors -->
+      <div class="flex gap-3 mb-3">
         <div class="flex-1">
-          <label class="text-xs text-slate-500 mb-1 block">Año A</label>
-          <select id="radar-year-a" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+          <label class="text-xs text-slate-500 mb-1 block">Período A</label>
+          <select id="radar-period-a" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
         </div>
         <div class="flex-1">
-          <label class="text-xs text-slate-500 mb-1 block">Año B</label>
-          <select id="radar-year-b" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+          <label class="text-xs text-slate-500 mb-1 block">Período B</label>
+          <select id="radar-period-b" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
         </div>
       </div>
 
       <!-- Legend -->
       <div class="flex gap-4 mb-3 justify-center">
-        <div class="flex items-center gap-2"><span class="w-4 h-1 rounded-full inline-block" style="background:#00FF00;"></span><span id="legend-a" class="text-xs text-slate-300">Actual</span></div>
-        <div class="flex items-center gap-2"><span class="w-4 h-1 rounded-full inline-block" style="background:#00BFFF;"></span><span id="legend-b" class="text-xs text-slate-300">Anterior</span></div>
+        <div class="flex items-center gap-2"><span class="w-4 h-1 rounded-full inline-block" style="background:#00FF00;"></span><span id="legend-a" class="text-xs text-slate-300">A</span></div>
+        <div class="flex items-center gap-2"><span class="w-4 h-1 rounded-full inline-block" style="background:#00BFFF;"></span><span id="legend-b" class="text-xs text-slate-300">B</span></div>
       </div>
 
-      <!-- Totales por año -->
+      <!-- Totales -->
       <div class="flex gap-3 mb-3">
         <div class="flex-1 bg-slate-800 rounded-xl p-3 text-center border border-slate-700">
-          <p class="text-xs text-slate-500 mb-1" id="total-label-a">2026</p>
+          <p class="text-xs text-slate-500 mb-1" id="total-label-a">A</p>
           <p class="text-2xl font-bold text-brand" id="total-score-a">—</p>
           <p class="text-xs text-slate-500">promedio</p>
         </div>
         <div class="flex-1 bg-slate-800 rounded-xl p-3 text-center border border-slate-700 flex flex-col items-center justify-center">
           <p class="text-xs text-slate-500 mb-1">Variación</p>
           <p class="text-2xl font-bold" id="total-variacion">—</p>
-          <p class="text-xs" id="total-variacion-label">vs año anterior</p>
+          <p class="text-xs" id="total-variacion-label">vs período</p>
         </div>
         <div class="flex-1 bg-slate-800 rounded-xl p-3 text-center border border-slate-700">
-          <p class="text-xs text-slate-500 mb-1" id="total-label-b">2025</p>
+          <p class="text-xs text-slate-500 mb-1" id="total-label-b">B</p>
           <p class="text-2xl font-bold" id="total-score-b" style="color:#00BFFF;">—</p>
           <p class="text-xs text-slate-500">promedio</p>
         </div>
@@ -296,7 +316,6 @@
         </h3>
         <div id="cambios-list" class="space-y-3"></div>
       </div>
-
     </div>
 
     <!-- TAB: TENDENCIA -->
@@ -544,13 +563,27 @@ function getBonnoTip(catId, score) {
 
 // ── DASHBOARD ─────────────────────────────────────────────
 function renderDashboard() {
-  const yearData = getYearData(CURRENT_YEAR);
+  // Find last evaluated period
+  const data = getData();
+  let activeYear = CURRENT_YEAR;
+  let activePeriod = 'Anual';
+  const periodOrder = ['Q4','Q3','Q2','Q1','S2','S1','Anual'];
+  outerLoop: for (let y = CURRENT_YEAR; y >= CURRENT_YEAR - 4; y--) {
+    if (data[y]) {
+      for (const p of periodOrder) {
+        if (data[y][p] && Object.keys(data[y][p]).length > 0) {
+          activeYear = y; activePeriod = p; break outerLoop;
+        }
+      }
+    }
+  }
+  const yearData = data[activeYear]?.[activePeriod] || {};
   const scores = CATEGORIAS.map(c => (yearData[c.id] ? yearData[c.id].score : 0));
   const hasData = scores.some(s => s > 0);
 
   // Header year
   const yearBadge = document.getElementById('header-year-label');
-  if (yearBadge) yearBadge.textContent = CURRENT_YEAR;
+  if (yearBadge) yearBadge.textContent = activeYear + ' · ' + (PERIOD_LABELS[activePeriod] || activePeriod);
 
   // Score general
   const avg = hasData
@@ -560,15 +593,15 @@ function renderDashboard() {
   document.getElementById('score-general').textContent = avg;
   document.getElementById('score-bar').style.width = hasData ? (parseFloat(avg) * 10) + '%' : '0%';
 
-  // Tendencia vs año anterior
-  const prevData = getYearData(CURRENT_YEAR - 1);
+  // Tendencia vs año anterior mismo periodo
+  const prevData = data[activeYear - 1]?.[activePeriod] || {};
   const prevScores = CATEGORIAS.map(c => (prevData[c.id] ? prevData[c.id].score : 0)).filter(s => s > 0);
   const tendEl = document.getElementById('score-tendencia');
   if (hasData && prevScores.length > 0) {
     const prevAvg = prevScores.reduce((a, b) => a + b, 0) / prevScores.length;
     const diff = (parseFloat(avg) - prevAvg).toFixed(1);
     const up = diff >= 0;
-    tendEl.textContent = (up ? '▲ +' : '▼ ') + diff + ' vs ' + (CURRENT_YEAR - 1);
+    tendEl.textContent = (up ? '▲ +' : '▼ ') + diff + ' vs ' + (activeYear - 1) + ' ' + (PERIOD_LABELS[activePeriod] || activePeriod);
     tendEl.className = 'ml-auto text-sm font-medium px-2 py-1 rounded-lg ' + (up ? 'text-green-400 bg-green-900/30' : 'text-red-400 bg-red-900/30');
   } else {
     tendEl.textContent = '';
@@ -630,22 +663,89 @@ function renderDashboard() {
   }
 }
 
+// ── PERÍODOS ──────────────────────────────────────────────
+const PERIODS = {
+  trimestral: ['Q1','Q2','Q3','Q4'],
+  semestral:  ['S1','S2'],
+  anual:      ['Anual']
+};
+const PERIOD_LABELS = { Q1:'Q1 (Ene-Mar)', Q2:'Q2 (Abr-Jun)', Q3:'Q3 (Jul-Sep)', Q4:'Q4 (Oct-Dic)', S1:'Semestre 1 (Ene-Jun)', S2:'Semestre 2 (Jul-Dic)', Anual:'Anual' };
+
+let currentPeriodType = 'trimestral';
+let currentCmpMode = 'same';
+
+function getPeriodKey(year, period) { return `${year}_${period}`; }
+
+function getAllPeriodKeys() {
+  const data = getData();
+  const keys = [];
+  Object.keys(data).forEach(year => {
+    if (!isNaN(year)) {
+      Object.keys(data[year]).forEach(period => {
+        if (period !== 'anual' && !period.startsWith('notas')) keys.push(`${year}_${period}`);
+      });
+    }
+  });
+  return keys;
+}
+
+function getLastEvaluatedPeriod() {
+  const data = getData();
+  let last = null;
+  YEARS.forEach(year => {
+    if (data[year]) {
+      ['Anual','S2','S1','Q4','Q3','Q2','Q1'].forEach(p => {
+        if (data[year][p] && !last) last = { year, period: p };
+      });
+    }
+  });
+  return last;
+}
+
+function switchPeriodTab(type) {
+  currentPeriodType = type;
+  ['trimestral','semestral','anual'].forEach(t => {
+    const btn = document.getElementById('ptab-' + t);
+    if (t === type) { btn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold bg-brand text-slate-900'; }
+    else { btn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400'; }
+  });
+  updatePeriodSelect();
+  loadEvalForm();
+}
+
+function updatePeriodSelect() {
+  const sel = document.getElementById('eval-period-select');
+  sel.innerHTML = PERIODS[currentPeriodType].map(p => `<option value="${p}">${PERIOD_LABELS[p]}</option>`).join('');
+}
+
+function switchCmpMode(mode) {
+  currentCmpMode = mode;
+  ['same','cross'].forEach(m => {
+    const btn = document.getElementById('cmp-' + m + '-btn');
+    if (m === mode) btn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold bg-brand text-slate-900';
+    else btn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400';
+  });
+  initAnalisis();
+}
+
 // ── EVALUACIÓN ────────────────────────────────────────────
 function initEvalForm() {
-  // Populate year selector
   const sel = document.getElementById('eval-year-select');
   sel.innerHTML = YEARS.map(y => `<option value="${y}" ${y === CURRENT_YEAR ? 'selected' : ''}>${y}</option>`).join('');
+  updatePeriodSelect();
   loadEvalForm();
 }
 
 function loadEvalForm() {
   const year = parseInt(document.getElementById('eval-year-select').value);
-  const yearData = getYearData(year);
+  const period = document.getElementById('eval-period-select').value;
+  const data = getData();
+  const periodData = data[year]?.[period] || {};
   const container = document.getElementById('eval-cards');
   container.innerHTML = '';
 
   CATEGORIAS.forEach(cat => {
-    const saved = yearData[cat.id] || { score: 5, analisis: [], acciones: [] };
+    const saved = periodData[cat.id] || { score: 5, analisis: [], acciones: [] };
     const analisis = saved.analisis || [];
     const acciones = saved.acciones || [{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false}];
 
@@ -679,12 +779,9 @@ function loadEvalForm() {
             <p class="text-xs text-slate-500">Puntaje: <span id="score-display-${cat.id}" class="text-brand font-bold">${saved.score}</span>/10</p>
           </div>
         </div>
-
-        <!-- Slider -->
         <div class="mb-4">
           <div class="flex justify-between text-xs text-slate-600 mb-2">
-            <span>1 — Muy bajo</span>
-            <span>10 — Excelente</span>
+            <span>1 — Muy bajo</span><span>10 — Excelente</span>
           </div>
           <input type="range" min="1" max="10" value="${saved.score}"
             id="slider-${cat.id}" oninput="updateScore('${cat.id}', this.value)" class="w-full" />
@@ -692,41 +789,49 @@ function loadEvalForm() {
             ${Array.from({length:10},(_,i)=>`<span class="text-xs ${(i+1)==saved.score?'text-brand font-bold':'text-slate-600'}" id="tick-${cat.id}-${i+1}">${i+1}</span>`).join('')}
           </div>
         </div>
-
-        <!-- Toggle análisis/acciones -->
         <button onclick="toggleEvalPanel('${cat.id}')"
-          class="w-full flex items-center justify-between py-2 px-3 bg-slate-800 rounded-xl mb-0 border border-slate-700 active:opacity-70">
+          class="w-full flex items-center justify-between py-2 px-3 bg-slate-800 rounded-xl border border-slate-700 active:opacity-70">
           <span class="text-xs font-medium text-slate-300">📝 Análisis y Acciones</span>
           <span class="material-symbols-outlined text-slate-400 transition-transform duration-300" id="eval-chevron-${cat.id}" style="font-size:18px;">expand_more</span>
         </button>
-
-        <!-- Panel oculto -->
         <div id="eval-panel-${cat.id}" class="hidden mt-3 space-y-4">
-
-          <!-- Análisis -->
           <div class="bg-slate-800 rounded-xl p-3">
             <p class="text-xs font-semibold text-brand mb-2">📊 Mi Análisis <span class="text-slate-500 font-normal">(${analisis.length}/5)</span></p>
-            <div id="analisis-list-${cat.id}" class="space-y-1 mb-2 min-h-4">
-              ${analisisHTML}
-            </div>
-            ${analisis.length < 5 ? `
-            <input type="text" id="analisis-input-${cat.id}"
-              placeholder="Escribe y presiona Enter..."
-              class="w-full bg-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none border border-slate-600"
-              onkeydown="addAnalisis(event,'${cat.id}')" />` : `<p class="text-xs text-slate-500 italic">Máximo 5 análisis alcanzado</p>`}
+            <div id="analisis-list-${cat.id}" class="space-y-1 mb-2 min-h-4">${analisisHTML}</div>
+            ${analisis.length < 5 ? `<input type="text" id="analisis-input-${cat.id}" placeholder="Escribe y presiona Enter..." class="w-full bg-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none border border-slate-600" onkeydown="addAnalisis(event,'${cat.id}')" />` : `<p class="text-xs text-slate-500 italic">Máximo 5 análisis alcanzado</p>`}
           </div>
-
-          <!-- Acciones -->
           <div class="bg-slate-800 rounded-xl p-3">
             <p class="text-xs font-semibold text-brand mb-3">✅ Mis Acciones</p>
-            <div class="space-y-3">
-              ${accionesHTML}
-            </div>
+            <div class="space-y-3">${accionesHTML}</div>
           </div>
-
         </div>
       </div>`;
   });
+}
+
+function saveEvaluation() {
+  const year = parseInt(document.getElementById('eval-year-select').value);
+  const period = document.getElementById('eval-period-select').value;
+  const data = getData();
+  if (!data[year]) data[year] = {};
+  if (!data[year][period]) data[year][period] = {};
+
+  CATEGORIAS.forEach(cat => {
+    const existing = data[year][period][cat.id] || {};
+    data[year][period][cat.id] = {
+      score: parseInt(document.getElementById('slider-' + cat.id).value),
+      analisis: existing.analisis || [],
+      acciones: existing.acciones || []
+    };
+    for (let i = 0; i < 5; i++) {
+      const input = document.getElementById(`accion-${cat.id}-${i}`);
+      const check = document.getElementById(`check-${cat.id}-${i}`);
+      if (input) data[year][period][cat.id].acciones[i] = { texto: input.value, check: check ? check.checked : false };
+    }
+  });
+
+  setData(data);
+  showToast('✓ ' + PERIOD_LABELS[period] + ' ' + year + ' guardado');
 }
 
 function updateScore(catId, val) {
@@ -735,30 +840,6 @@ function updateScore(catId, val) {
     const tick = document.getElementById(`tick-${catId}-${i}`);
     if (tick) tick.className = `text-xs ${i == val ? 'text-brand font-bold' : 'text-slate-600'}`;
   }
-}
-
-function saveEvaluation() {
-  const year = parseInt(document.getElementById('eval-year-select').value);
-  const data = getData();
-  if (!data[year]) data[year] = {};
-
-  CATEGORIAS.forEach(cat => {
-    const existing = data[year][cat.id] || {};
-    data[year][cat.id] = {
-      score: parseInt(document.getElementById('slider-' + cat.id).value),
-      analisis: existing.analisis || [],
-      acciones: existing.acciones || [{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false}]
-    };
-    // Save acciones text from inputs
-    for (let i = 0; i < 5; i++) {
-      const input = document.getElementById(`accion-${cat.id}-${i}`);
-      const check = document.getElementById(`check-${cat.id}-${i}`);
-      if (input) data[year][cat.id].acciones[i] = { texto: input.value, check: check ? check.checked : false };
-    }
-  });
-
-  setData(data);
-  showToast('✓ Evaluación ' + year + ' guardada');
 }
 
 function toggleEvalPanel(catId) {
@@ -774,19 +855,18 @@ function addAnalisis(event, catId) {
   const input = document.getElementById('analisis-input-' + catId);
   const text = input.value.trim();
   if (!text) return;
-
   const year = parseInt(document.getElementById('eval-year-select').value);
+  const period = document.getElementById('eval-period-select').value;
   const data = getData();
   if (!data[year]) data[year] = {};
-  if (!data[year][catId]) data[year][catId] = { score: 5, analisis: [], acciones: [] };
-  if (!data[year][catId].analisis) data[year][catId].analisis = [];
-  if (data[year][catId].analisis.length >= 5) return;
-
-  data[year][catId].analisis.push(text);
+  if (!data[year][period]) data[year][period] = {};
+  if (!data[year][period][catId]) data[year][period][catId] = { score: 5, analisis: [], acciones: [] };
+  if (!data[year][period][catId].analisis) data[year][period][catId].analisis = [];
+  if (data[year][period][catId].analisis.length >= 5) return;
+  data[year][period][catId].analisis.push(text);
   setData(data);
   input.value = '';
   loadEvalForm();
-  // Re-open the panel
   setTimeout(() => {
     const panel = document.getElementById('eval-panel-' + catId);
     const chevron = document.getElementById('eval-chevron-' + catId);
@@ -796,9 +876,10 @@ function addAnalisis(event, catId) {
 
 function removeAnalisis(catId, index) {
   const year = parseInt(document.getElementById('eval-year-select').value);
+  const period = document.getElementById('eval-period-select').value;
   const data = getData();
-  if (data[year]?.[catId]?.analisis) {
-    data[year][catId].analisis.splice(index, 1);
+  if (data[year]?.[period]?.[catId]?.analisis) {
+    data[year][period][catId].analisis.splice(index, 1);
     setData(data);
     loadEvalForm();
     setTimeout(() => {
@@ -811,26 +892,30 @@ function removeAnalisis(catId, index) {
 
 function toggleAccion(catId, index) {
   const year = parseInt(document.getElementById('eval-year-select').value);
+  const period = document.getElementById('eval-period-select').value;
   const data = getData();
   if (!data[year]) data[year] = {};
-  if (!data[year][catId]) data[year][catId] = { score: 5, analisis: [], acciones: [] };
-  if (!data[year][catId].acciones) data[year][catId].acciones = [];
+  if (!data[year][period]) data[year][period] = {};
+  if (!data[year][period][catId]) data[year][period][catId] = { score: 5, analisis: [], acciones: [] };
+  if (!data[year][period][catId].acciones) data[year][period][catId].acciones = [];
   const check = document.getElementById(`check-${catId}-${index}`);
   const input = document.getElementById(`accion-${catId}-${index}`);
-  if (!data[year][catId].acciones[index]) data[year][catId].acciones[index] = { texto: '', check: false };
-  data[year][catId].acciones[index].check = check.checked;
+  if (!data[year][period][catId].acciones[index]) data[year][period][catId].acciones[index] = { texto: '', check: false };
+  data[year][period][catId].acciones[index].check = check.checked;
   if (input) { input.className = input.className.replace('line-through text-slate-500','').replace('text-slate-300',''); input.className += check.checked ? ' line-through text-slate-500' : ' text-slate-300'; }
   setData(data);
 }
 
 function updateAccion(catId, index, value) {
   const year = parseInt(document.getElementById('eval-year-select').value);
+  const period = document.getElementById('eval-period-select').value;
   const data = getData();
   if (!data[year]) data[year] = {};
-  if (!data[year][catId]) data[year][catId] = { score: 5, analisis: [], acciones: [] };
-  if (!data[year][catId].acciones) data[year][catId].acciones = [];
-  if (!data[year][catId].acciones[index]) data[year][catId].acciones[index] = { texto: '', check: false };
-  data[year][catId].acciones[index].texto = value;
+  if (!data[year][period]) data[year][period] = {};
+  if (!data[year][period][catId]) data[year][period][catId] = { score: 5, analisis: [], acciones: [] };
+  if (!data[year][period][catId].acciones) data[year][period][catId].acciones = [];
+  if (!data[year][period][catId].acciones[index]) data[year][period][catId].acciones[index] = { texto: '', check: false };
+  data[year][period][catId].acciones[index].texto = value;
   setData(data);
 }
 
@@ -845,31 +930,52 @@ function switchAnalysisTab(tab) {
   else setTimeout(renderRadar, 80);
 }
 
-function initAnalisis() {
+function getAllPeriodOptions() {
   const data = getData();
-  const yearsWithData = YEARS.filter(y => data[y] && Object.keys(data[y]).length > 0);
-  const allYears = yearsWithData.length > 0 ? yearsWithData : YEARS;
+  const opts = [];
+  YEARS.forEach(year => {
+    if (data[year]) {
+      ['Q1','Q2','Q3','Q4','S1','S2','Anual'].forEach(p => {
+        if (data[year][p]) opts.push({ key: `${year}_${p}`, label: `${year} · ${PERIOD_LABELS[p]}` });
+      });
+    }
+  });
+  return opts.length > 0 ? opts : YEARS.flatMap(y => ['Q1','Q2','Q3','Q4','S1','S2','Anual'].map(p => ({ key: `${y}_${p}`, label: `${y} · ${PERIOD_LABELS[p]}` })));
+}
 
-  const ra = document.getElementById('radar-year-a');
-  const rb = document.getElementById('radar-year-b');
-  ra.innerHTML = allYears.map((y,i) => `<option value="${y}" ${i===allYears.length-1?'selected':''}>${y}</option>`).join('');
-  rb.innerHTML = allYears.map((y,i) => `<option value="${y}" ${i===Math.max(0,allYears.length-2)?'selected':''}>${y}</option>`).join('');
+function getPeriodData(key) {
+  const parts = key.split('_');
+  const year = parts[0];
+  const period = parts.slice(1).join('_');
+  const data = getData();
+  return data[year]?.[period] || {};
+}
+
+function initAnalisis() {
+  const opts = getAllPeriodOptions();
+  const ra = document.getElementById('radar-period-a');
+  const rb = document.getElementById('radar-period-b');
+  ra.innerHTML = opts.map((o,i) => `<option value="${o.key}" ${i===opts.length-1?'selected':''}>${o.label}</option>`).join('');
+  rb.innerHTML = opts.map((o,i) => `<option value="${o.key}" ${i===Math.max(0,opts.length-2)?'selected':''}>${o.label}</option>`).join('');
 
   const tsel = document.getElementById('trend-cat-select');
   tsel.innerHTML = CATEGORIAS.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 
-  // reset to radar tab
   switchAnalysisTab('radar');
 }
 
 function renderRadar() {
-  const yearA = parseInt(document.getElementById('radar-year-a').value);
-  const yearB = parseInt(document.getElementById('radar-year-b').value);
-  const dataA = getYearData(yearA);
-  const dataB = getYearData(yearB);
+  const keyA = document.getElementById('radar-period-a').value;
+  const keyB = document.getElementById('radar-period-b').value;
+  const dataA = getPeriodData(keyA);
+  const dataB = getPeriodData(keyB);
+  const selA = document.getElementById('radar-period-a');
+  const selB = document.getElementById('radar-period-b');
+  const labelA = selA.options[selA.selectedIndex]?.text || keyA;
+  const labelB = selB.options[selB.selectedIndex]?.text || keyB;
 
-  document.getElementById('legend-a').textContent = yearA;
-  document.getElementById('legend-b').textContent = yearB;
+  document.getElementById('legend-a').textContent = labelA;
+  document.getElementById('legend-b').textContent = labelB;
 
   // Totales
   const validA = CATEGORIAS.map(c => dataA[c.id]?.score).filter(Boolean);
@@ -877,8 +983,8 @@ function renderRadar() {
   const avgA = validA.length ? (validA.reduce((a,b)=>a+b,0)/validA.length).toFixed(1) : null;
   const avgB = validB.length ? (validB.reduce((a,b)=>a+b,0)/validB.length).toFixed(1) : null;
 
-  document.getElementById('total-label-a').textContent = yearA;
-  document.getElementById('total-label-b').textContent = yearB;
+  document.getElementById('total-label-a').textContent = labelA.split(' · ')[1] || labelA;
+  document.getElementById('total-label-b').textContent = labelB.split(' · ')[1] || labelB;
   document.getElementById('total-score-a').textContent = avgA ?? '—';
   document.getElementById('total-score-b').textContent = avgB ?? '—';
 
@@ -889,7 +995,7 @@ function renderRadar() {
     const up = diff >= 0;
     varEl.textContent = (up ? '▲ +' : '▼ ') + diff;
     varEl.style.color = up ? '#00FF00' : '#f87171';
-    varLabel.textContent = yearA + ' vs ' + yearB;
+    varLabel.textContent = 'variación';
     varLabel.style.color = up ? '#00FF00' : '#f87171';
   } else {
     varEl.textContent = '—';
@@ -910,13 +1016,13 @@ function renderRadar() {
       labels,
       datasets: [
         {
-          label: String(yearA), data: scoresA,
+          label: labelA, data: scoresA,
           borderColor: '#00FF00', backgroundColor: 'rgba(0,255,0,0.18)',
           borderWidth: 2.5, pointBackgroundColor: '#00FF00',
           pointRadius: 5, pointHoverRadius: 7
         },
         {
-          label: String(yearB), data: scoresB,
+          label: labelB, data: scoresB,
           borderColor: '#00BFFF', backgroundColor: 'rgba(0,191,255,0.12)',
           borderWidth: 2, pointBackgroundColor: '#00BFFF',
           pointRadius: 4, pointHoverRadius: 6
