@@ -135,30 +135,34 @@
         <span class="material-symbols-outlined text-slate-400 transition-transform duration-300" id="info-chevron" style="font-size:20px;">expand_more</span>
       </button>
       <div id="info-panel" class="hidden bg-slate-900 rounded-2xl border border-slate-800 border-t-0 rounded-t-none px-4 pb-4 text-sm text-slate-300 space-y-3" style="border-top-left-radius:0; border-top-right-radius:0;">
-        <p class="pt-3 text-slate-400 text-xs leading-relaxed">La Rueda de la Vida es una herramienta de coaching personal que te permite evaluar de forma visual el equilibrio entre las diferentes áreas de tu vida. Al asignar un puntaje a cada área, puedes identificar dónde estás bien y dónde necesitas poner más atención.</p>
+        <p class="pt-3 text-slate-400 text-xs leading-relaxed">La Rueda de la Vida es una herramienta de coaching personal que permite evaluar de forma visual el equilibrio entre las diferentes áreas de la vida. Al asignar un puntaje a cada área, puede identificar dónde está bien y dónde necesita poner más atención.</p>
 
         <div>
           <p class="font-semibold text-xs text-brand mb-1.5">¿Para qué sirve?</p>
           <ul class="text-xs text-slate-400 space-y-1">
-            <li class="flex gap-2"><span class="text-brand">·</span> Tener una foto clara de tu vida en este momento</li>
-            <li class="flex gap-2"><span class="text-brand">·</span> Identificar las áreas que más necesitan tu energía</li>
-            <li class="flex gap-2"><span class="text-brand">·</span> Comparar tu evolución año a año</li>
-            <li class="flex gap-2"><span class="text-brand">·</span> Tomar decisiones más conscientes sobre tus prioridades</li>
+            <li class="flex gap-2"><span class="text-brand">·</span> Tener una foto clara de su vida en este momento</li>
+            <li class="flex gap-2"><span class="text-brand">·</span> Identificar las áreas que más necesitan su energía</li>
+            <li class="flex gap-2"><span class="text-brand">·</span> Comparar su evolución por períodos y año a año</li>
+            <li class="flex gap-2"><span class="text-brand">·</span> Tomar decisiones más conscientes sobre sus prioridades</li>
           </ul>
         </div>
 
         <div>
           <p class="font-semibold text-xs text-brand mb-1.5">¿Cómo usar la app?</p>
           <ul class="text-xs text-slate-400 space-y-1.5">
-            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Evaluar</span> — Selecciona el año y ponle un puntaje del 1 al 10 a cada área con tus notas. Recuerda: 1 es la nota más baja y 10 la más alta</span></li>
-            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Inicio</span> — Ve tu promedio general, tendencia vs el año anterior y las 3 áreas que necesitan más atención</span></li>
-            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Análisis</span> — Compara dos años en el radar, revisa la evolución de cada categoría y analiza las tendencias de mejora o retroceso en el tiempo</span></li>
-            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Ajustes</span> — Guarda tu nombre y respalda o restaura tus datos</span></li>
+            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Evaluar</span> — Seleccione el año y período (trimestral, semestral o anual), asigne un puntaje del 1 al 10 a cada área con sus notas. Recuerde: 1 es la nota más baja y 10 la más alta</span></li>
+            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Inicio</span> — Vea su promedio general, tendencia vs el período anterior y las 3 áreas que necesitan más atención</span></li>
+            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Análisis</span> — Compare períodos del mismo año o entre años, y analice las tendencias de mejora o retroceso</span></li>
+            <li class="flex gap-2"><span class="text-brand">·</span><span><span class="text-slate-300 font-medium">Ajustes</span> — Guarde su nombre y respalde o restaure sus datos</span></li>
           </ul>
         </div>
 
         <div class="bg-slate-800 rounded-xl p-3 mt-1">
-          <p class="text-xs text-slate-300 leading-relaxed">💡 <span class="font-semibold">Sé honesto con tu puntaje.</span> Un 10 en todas las áreas no existe — siempre hay espacio para crecer. La Rueda solo es útil si refleja tu realidad, no la que deseas tener.</p>
+          <p class="text-xs text-slate-300 leading-relaxed">💡 <span class="font-semibold">Sea honesto con su puntaje.</span> Un 10 en todas las áreas no existe — siempre hay espacio para crecer. La Rueda solo es útil si refleja su realidad, no la que desea tener.</p>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-3 mt-1">
+          <p class="text-xs text-slate-300 leading-relaxed">🔒 <span class="font-semibold">Su información es 100% privada.</span> Los datos se guardan únicamente en su dispositivo y nadie más tiene acceso a ellos — ni siquiera el creador de la app.</p>
         </div>
       </div>
     </div>
@@ -410,6 +414,12 @@
           Importar datos (JSON)
           <input type="file" accept=".json" class="hidden" onchange="importData(event)" />
         </label>
+        <label class="w-full py-3 rounded-xl border border-brand/40 text-brand font-medium flex items-center justify-center gap-2 cursor-pointer">
+          <span class="material-symbols-outlined" style="font-size:20px;">history</span>
+          Importar formato anterior
+          <input type="file" accept=".json" class="hidden" onchange="importLegacyData(event)" />
+        </label>
+        <p class="text-xs text-slate-500 text-center -mt-1">Para archivos guardados antes de los períodos</p>
         <button onclick="openModal()" class="w-full py-3 rounded-xl border border-red-800 text-red-400 font-medium flex items-center justify-center gap-2">
           <span class="material-symbols-outlined" style="font-size:20px;">delete_forever</span>
           Borrar todos los datos
@@ -1270,6 +1280,46 @@ function importData(event) {
 }
 
 function openModal() { document.getElementById('modal-overlay').classList.add('show'); }
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const legacy = JSON.parse(e.target.result);
+      const newData = getData();
+
+      // Legacy format: { "2025": { "amor": { "score": 7, "notas": "..." }, ... } }
+      // New format:    { "2025": { "Anual": { "amor": { "score": 7, "analisis": [], "acciones": [] } } } }
+      Object.keys(legacy).forEach(year => {
+        const yearData = legacy[year];
+        // Check if it's legacy format (values have score directly, not nested under period)
+        const isLegacy = yearData && typeof yearData === 'object' &&
+          CATEGORIAS.some(c => yearData[c.id] && typeof yearData[c.id].score === 'number');
+
+        if (isLegacy) {
+          if (!newData[year]) newData[year] = {};
+          if (!newData[year]['Anual']) newData[year]['Anual'] = {};
+          CATEGORIAS.forEach(cat => {
+            if (yearData[cat.id]) {
+              newData[year]['Anual'][cat.id] = {
+                score: yearData[cat.id].score || 5,
+                analisis: yearData[cat.id].notas ? [yearData[cat.id].notas] : [],
+                acciones: [{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false}]
+              };
+            }
+          });
+        }
+      });
+
+      setData(newData);
+      showToast('✓ Datos anteriores migrados a Anual');
+      event.target.value = '';
+    } catch (err) {
+      showToast('⚠️ Archivo inválido');
+    }
+  };
+  reader.readAsText(file);
+}
 function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
 function confirmDeleteAll() {
   localStorage.removeItem('rueda_vida_data');
