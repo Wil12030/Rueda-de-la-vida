@@ -134,7 +134,7 @@
         </div>
         <span class="material-symbols-outlined text-slate-400 transition-transform duration-300" id="info-chevron" style="font-size:20px;">expand_more</span>
       </button>
-      <div id="info-panel" class="hidden bg-slate-900 rounded-2xl border border-slate-800 border-t-0 rounded-t-none px-4 pb-4 text-sm text-slate-300 space-y-3" style="border-top-left-radius:0; border-top-right-radius:0;">
+      <div id="info-panel" class="hidden bg-slate-900 rounded-b-2xl border border-slate-800 border-t-0 px-4 pb-4 text-sm text-slate-300 space-y-3" style="position:relative; z-index:1;">
         <p class="pt-3 text-slate-400 text-xs leading-relaxed">La Rueda de la Vida es una herramienta de coaching personal que permite evaluar de forma visual el equilibrio entre las diferentes áreas de la vida. Al asignar un puntaje a cada área, puede identificar dónde está bien y dónde necesita poner más atención.</p>
 
         <div>
@@ -1359,7 +1359,7 @@ document.getElementById('manifest-link').href = manifestURL;
 // Service Worker
 if ('serviceWorker' in navigator) {
   const swCode = `
-const CACHE = 'rueda-vida-v1';
+const CACHE = 'rueda-vida-v3';
 self.addEventListener('install', e => {
   self.skipWaiting();
 });
