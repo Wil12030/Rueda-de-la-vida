@@ -121,7 +121,9 @@
         <p class="text-slate-400 text-xs" id="header-user-name">Tu espacio personal</p>
       </div>
       <div class="ml-auto">
-        <span class="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full" id="header-year-label"></span>
+        <select id="dashboard-period-select" onchange="renderDashboard()"
+          class="text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 outline-none font-medium">
+        </select>
       </div>
     </div>
 
@@ -588,27 +590,34 @@ function getBonnoTip(catId, score) {
 
 // ── DASHBOARD ─────────────────────────────────────────────
 function renderDashboard() {
-  // Find last evaluated period
   const data = getData();
-  let activeYear = CURRENT_YEAR;
-  let activePeriod = 'Anual';
-  const periodOrder = ['Q4','Q3','Q2','Q1','S2','S1','Anual'];
-  outerLoop: for (let y = CURRENT_YEAR; y >= CURRENT_YEAR - 4; y--) {
-    if (data[y]) {
-      for (const p of periodOrder) {
-        if (data[y][p] && Object.keys(data[y][p]).length > 0) {
-          activeYear = y; activePeriod = p; break outerLoop;
-        }
+
+  // Populate period selector with current year periods
+  const sel = document.getElementById('dashboard-period-select');
+  if (sel && sel.options.length === 0) {
+    // First load — populate with all periods and auto-select last evaluated
+    const periodOrder = ['Q1','Q2','Q3','Q4','S1','S2','Anual'];
+    sel.innerHTML = periodOrder.map(p =>
+      `<option value="${CURRENT_YEAR}_${p}">${CURRENT_YEAR} · ${PERIOD_LABELS[p]}</option>`
+    ).join('');
+    // Auto-select last evaluated period
+    const evalOrder = ['Q4','Q3','Q2','Q1','S2','S1','Anual'];
+    let found = false;
+    for (const p of evalOrder) {
+      if (data[CURRENT_YEAR]?.[p] && Object.keys(data[CURRENT_YEAR][p]).length > 0) {
+        sel.value = `${CURRENT_YEAR}_${p}`; found = true; break;
       }
     }
+    if (!found) sel.value = `${CURRENT_YEAR}_Anual`;
   }
+
+  const selVal = sel?.value || `${CURRENT_YEAR}_Anual`;
+  const parts = selVal.split('_');
+  const activeYear = parseInt(parts[0]);
+  const activePeriod = parts.slice(1).join('_');
   const yearData = data[activeYear]?.[activePeriod] || {};
   const scores = CATEGORIAS.map(c => (yearData[c.id] ? yearData[c.id].score : 0));
   const hasData = scores.some(s => s > 0);
-
-  // Header year
-  const yearBadge = document.getElementById('header-year-label');
-  if (yearBadge) yearBadge.textContent = activeYear + ' · ' + (PERIOD_LABELS[activePeriod] || activePeriod);
 
   // Score general
   const avg = hasData
@@ -626,7 +635,7 @@ function renderDashboard() {
     const prevAvg = prevScores.reduce((a, b) => a + b, 0) / prevScores.length;
     const diff = (parseFloat(avg) - prevAvg).toFixed(1);
     const up = diff >= 0;
-    tendEl.textContent = (up ? '▲ +' : '▼ ') + diff + ' vs ' + (activeYear - 1) + ' ' + (PERIOD_LABELS[activePeriod] || activePeriod);
+    tendEl.textContent = (up ? '▲ +' : '▼ ') + diff + ' vs ' + (activeYear - 1) + ' · ' + (PERIOD_LABELS[activePeriod] || activePeriod);
     tendEl.className = 'ml-auto text-sm font-medium px-2 py-1 rounded-lg ' + (up ? 'text-green-400 bg-green-900/30' : 'text-red-400 bg-red-900/30');
   } else {
     tendEl.textContent = '';
