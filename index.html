@@ -1040,7 +1040,9 @@ function renderRadar() {
   const varEl = document.getElementById('total-variacion');
   const varLabel = document.getElementById('total-variacion-label');
   if (avgA && avgB) {
-    const diff = (parseFloat(avgA) - parseFloat(avgB)).toFixed(1);
+    const diff = (currentCmpMode === 'cross'
+      ? parseFloat(avgB) - parseFloat(avgA)
+      : parseFloat(avgA) - parseFloat(avgB)).toFixed(1);
     const up = diff >= 0;
     varEl.textContent = (up ? '▲ +' : '▼ ') + diff;
     varEl.style.color = up ? '#00FF00' : '#f87171';
@@ -1094,11 +1096,14 @@ function renderRadar() {
   });
 
   // Mayores cambios
+  const isCross = currentCmpMode === 'cross';
   const allCambios = CATEGORIAS.map(cat => ({
     ...cat,
     scoreA: dataA[cat.id]?.score || 0,
     scoreB: dataB[cat.id]?.score || 0,
-    diff: (dataA[cat.id]?.score || 0) - (dataB[cat.id]?.score || 0)
+    diff: isCross
+      ? (dataB[cat.id]?.score || 0) - (dataA[cat.id]?.score || 0)
+      : (dataA[cat.id]?.score || 0) - (dataB[cat.id]?.score || 0)
   })).filter(c => c.scoreA > 0 || c.scoreB > 0);
 
   const cambios = [...allCambios].sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff)).slice(0, 4);
@@ -1114,6 +1119,8 @@ function renderRadar() {
       const color = same ? 'text-slate-400' : (up ? 'text-brand' : 'text-red-400');
       const bgIcon = same ? 'bg-slate-800' : (up ? 'bg-green-900/40' : 'bg-red-900/30');
       const diffStr = same ? '=' : ((up ? '+' : '') + c.diff.toFixed(1));
+      const from = isCross ? c.scoreA : c.scoreB;
+      const to = isCross ? c.scoreB : c.scoreA;
       return `
         <div class="flex items-center gap-3 p-3 bg-slate-900 rounded-xl border border-slate-800">
           <div class="w-11 h-11 rounded-xl ${bgIcon} flex items-center justify-center flex-shrink-0">
@@ -1121,7 +1128,7 @@ function renderRadar() {
           </div>
           <div class="flex-1 min-w-0">
             <p class="font-semibold text-sm">${c.label}</p>
-            <p class="text-xs text-slate-500">${c.scoreB} → ${c.scoreA}</p>
+            <p class="text-xs text-slate-500">${from} → ${to}</p>
           </div>
           <div class="text-right">
             <p class="text-lg font-bold ${color}">${diffStr}</p>
