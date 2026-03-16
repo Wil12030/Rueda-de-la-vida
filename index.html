@@ -264,16 +264,31 @@
         <button id="cmp-cross-btn" onclick="switchCmpMode('cross')" class="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400">Entre años</button>
       </div>
 
-      <!-- Selectors -->
-      <div class="flex gap-3 mb-3">
+      <!-- MODO A: Mismo año — dos períodos del año actual -->
+      <div id="cmp-same-selectors" class="flex gap-3 mb-3">
         <div class="flex-1">
           <label class="text-xs text-slate-500 mb-1 block">Período A</label>
-          <select id="radar-period-a" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+          <select id="radar-same-a" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
         </div>
         <div class="flex-1">
           <label class="text-xs text-slate-500 mb-1 block">Período B</label>
-          <select id="radar-period-b" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+          <select id="radar-same-b" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
         </div>
+      </div>
+
+      <!-- MODO B: Entre años — año anterior (Anual) vs año actual (cualquier período) -->
+      <div id="cmp-cross-selectors" class="mb-3" style="display:none;">
+        <div class="flex gap-3 mb-2">
+          <div class="flex-1">
+            <label class="text-xs text-slate-500 mb-1 block">Año anterior</label>
+            <select id="radar-cross-year" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+          </div>
+          <div class="flex-1">
+            <label class="text-xs text-slate-500 mb-1 block">Período actual</label>
+            <select id="radar-cross-period" onchange="renderRadar()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm outline-none"></select>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 italic">Año anterior usa datos Anuales</p>
       </div>
 
       <!-- Legend -->
@@ -722,10 +737,13 @@ function switchCmpMode(mode) {
   currentCmpMode = mode;
   ['same','cross'].forEach(m => {
     const btn = document.getElementById('cmp-' + m + '-btn');
-    if (m === mode) btn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold bg-brand text-slate-900';
-    else btn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400';
+    if (btn) btn.className = 'flex-1 py-2 rounded-lg text-xs font-semibold ' + (m === mode ? 'bg-brand text-slate-900' : 'text-slate-400');
   });
-  initAnalisis();
+  const sameEl = document.getElementById('cmp-same-selectors');
+  const crossEl = document.getElementById('cmp-cross-selectors');
+  if (sameEl) sameEl.style.display = mode === 'same' ? 'flex' : 'none';
+  if (crossEl) crossEl.style.display = mode === 'cross' ? 'block' : 'none';
+  setTimeout(renderRadar, 80);
 }
 
 // ── EVALUACIÓN ────────────────────────────────────────────
@@ -952,27 +970,48 @@ function getPeriodData(key) {
 }
 
 function initAnalisis() {
-  const opts = getAllPeriodOptions();
-  const ra = document.getElementById('radar-period-a');
-  const rb = document.getElementById('radar-period-b');
-  ra.innerHTML = opts.map((o,i) => `<option value="${o.key}" ${i===opts.length-1?'selected':''}>${o.label}</option>`).join('');
-  rb.innerHTML = opts.map((o,i) => `<option value="${o.key}" ${i===Math.max(0,opts.length-2)?'selected':''}>${o.label}</option>`).join('');
+  // Modo A: mismo año — períodos del año actual
+  const currentPeriods = ['Q1','Q2','Q3','Q4','S1','S2','Anual'];
+  const sameOpts = currentPeriods.map(p => `<option value="${CURRENT_YEAR}_${p}">${PERIOD_LABELS[p]}</option>`).join('');
+  const saEl = document.getElementById('radar-same-a');
+  const sbEl = document.getElementById('radar-same-b');
+  if (saEl) { saEl.innerHTML = sameOpts; saEl.selectedIndex = 0; }
+  if (sbEl) { sbEl.innerHTML = sameOpts; sbEl.selectedIndex = Math.min(1, currentPeriods.length - 1); }
 
+  // Modo B: entre años — años anteriores (Anual) vs período actual
+  const prevYears = YEARS.filter(y => y < CURRENT_YEAR);
+  const cyEl = document.getElementById('radar-cross-year');
+  if (cyEl) cyEl.innerHTML = prevYears.map((y,i) => `<option value="${y}" ${i===prevYears.length-1?'selected':''}>${y} · Anual</option>`).join('');
+  const cpEl = document.getElementById('radar-cross-period');
+  if (cpEl) cpEl.innerHTML = currentPeriods.map(p => `<option value="${CURRENT_YEAR}_${p}">${CURRENT_YEAR} · ${PERIOD_LABELS[p]}</option>`).join('');
+
+  // Tendencia
   const tsel = document.getElementById('trend-cat-select');
-  tsel.innerHTML = CATEGORIAS.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+  if (tsel) tsel.innerHTML = CATEGORIAS.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 
   switchAnalysisTab('radar');
 }
 
 function renderRadar() {
-  const keyA = document.getElementById('radar-period-a').value;
-  const keyB = document.getElementById('radar-period-b').value;
+  let keyA, keyB, labelA, labelB;
+  if (currentCmpMode === 'same') {
+    const saEl = document.getElementById('radar-same-a');
+    const sbEl = document.getElementById('radar-same-b');
+    keyA = saEl?.value || `${CURRENT_YEAR}_Q1`;
+    keyB = sbEl?.value || `${CURRENT_YEAR}_Q2`;
+    labelA = saEl?.options[saEl.selectedIndex]?.text || keyA;
+    labelB = sbEl?.options[sbEl.selectedIndex]?.text || keyB;
+  } else {
+    const cyEl = document.getElementById('radar-cross-year');
+    const cpEl = document.getElementById('radar-cross-period');
+    const prevYear = cyEl?.value || (CURRENT_YEAR - 1);
+    keyA = `${prevYear}_Anual`;
+    keyB = cpEl?.value || `${CURRENT_YEAR}_Anual`;
+    labelA = cyEl?.options[cyEl.selectedIndex]?.text || keyA;
+    labelB = cpEl?.options[cpEl.selectedIndex]?.text || keyB;
+  }
   const dataA = getPeriodData(keyA);
   const dataB = getPeriodData(keyB);
-  const selA = document.getElementById('radar-period-a');
-  const selB = document.getElementById('radar-period-b');
-  const labelA = selA.options[selA.selectedIndex]?.text || keyA;
-  const labelB = selB.options[selB.selectedIndex]?.text || keyB;
 
   document.getElementById('legend-a').textContent = labelA;
   document.getElementById('legend-b').textContent = labelB;
