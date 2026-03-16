@@ -1280,6 +1280,8 @@ function importData(event) {
 }
 
 function openModal() { document.getElementById('modal-overlay').classList.add('show'); }
+
+function importLegacyData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -1287,15 +1289,10 @@ function openModal() { document.getElementById('modal-overlay').classList.add('s
     try {
       const legacy = JSON.parse(e.target.result);
       const newData = getData();
-
-      // Legacy format: { "2025": { "amor": { "score": 7, "notas": "..." }, ... } }
-      // New format:    { "2025": { "Anual": { "amor": { "score": 7, "analisis": [], "acciones": [] } } } }
       Object.keys(legacy).forEach(year => {
         const yearData = legacy[year];
-        // Check if it's legacy format (values have score directly, not nested under period)
         const isLegacy = yearData && typeof yearData === 'object' &&
           CATEGORIAS.some(c => yearData[c.id] && typeof yearData[c.id].score === 'number');
-
         if (isLegacy) {
           if (!newData[year]) newData[year] = {};
           if (!newData[year]['Anual']) newData[year]['Anual'] = {};
@@ -1310,7 +1307,6 @@ function openModal() { document.getElementById('modal-overlay').classList.add('s
           });
         }
       });
-
       setData(newData);
       showToast('✓ Datos anteriores migrados a Anual');
       event.target.value = '';
