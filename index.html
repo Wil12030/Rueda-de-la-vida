@@ -490,6 +490,58 @@ function goTo(screen) {
   if (screen === 'analisis') initAnalisis();
 }
 
+// ── BONNO TIPS ────────────────────────────────────────────
+const BONNO_TIPS = {
+  amor: {
+    low:  "Un 1 a 3 en amor no es una crisis, es una emergencia. Algo está muy mal y usted lo sabe. Deje de postergar la conversación difícil — las relaciones no mejoran solas y el silencio no es una estrategia.",
+    mid:  "Hay relación pero algo no está funcionando. No espere a que el problema crezca — identifique qué está fallando, comuníquelo y actúe. El amor sin acción es solo buena intención.",
+    high: "Va bien, pero no se confíe. Las relaciones necesitan mantenimiento constante. Invierta tiempo de calidad antes de que la rutina haga el trabajo que usted dejó de hacer."
+  },
+  finanzas: {
+    low:  "Un 1 a 3 en finanzas es una alarma que lleva tiempo sonando. Revise sus deudas, sus gastos y lo que entra — hoy, no la próxima semana. El dinero no espera y los intereses tampoco.",
+    mid:  "Mitad del camino no es suficiente cuando hablamos de dinero. Defina un presupuesto, separe un porcentaje de ahorro antes de gastar y empiece a invertir aunque sea poco. El tiempo es el activo más valioso que tiene.",
+    high: "Va por buen camino pero siempre hay optimización. Revise si sus inversiones están alineadas con sus metas y si su fondo de emergencia está completo. Lo bueno puede ser mejor."
+  },
+  hobbies: {
+    low:  "Un 1 a 3 aquí significa que vive para trabajar y no trabaja para vivir. Sin espacios de disfrute, el agotamiento es inevitable. Agende algo que le guste esta semana — no es opcional, es salud mental.",
+    mid:  "Tiene hobbies pero no les da el espacio que merecen. Bloquee tiempo en su agenda para actividades que lo recarguen. Lo que no se agenda, no existe.",
+    high: "Bien, sabe desconectarse. Ahora evalúe si alguno de esos hobbies puede convertirse en algo más — una habilidad, un proyecto, una fuente de ingresos adicional."
+  },
+  desarrollo: {
+    low:  "Un 1 a 3 en desarrollo personal significa que lleva tiempo estancado. El mundo avanza y usted está en pausa. Elija una habilidad, un libro o un curso — empiece hoy, no cuando tenga tiempo.",
+    mid:  "Algo está haciendo pero no es suficiente. Defina exactamente qué quiere aprender este año y póngale fecha. Sin un plan concreto, el desarrollo personal es solo una buena intención.",
+    high: "Está creciendo, bien. Ahora asegúrese de que lo que aprende lo está aplicando — el conocimiento que no se usa es solo información almacenada."
+  },
+  hogar: {
+    low:  "Un 1 a 3 aquí es una señal de que algo en casa no está bien. Sea el espacio físico o las relaciones familiares — ignore esto por mucho tiempo y el costo emocional será alto. Actúe ahora.",
+    mid:  "El hogar y la familia merecen más atención de la que les está dando. Identifique qué necesita mejorar — orden, tiempo en familia, conversaciones pendientes — y empiece por lo más urgente.",
+    high: "Va bien en este frente. Mantenga los espacios de conexión familiar y no deje que la rutina los elimine. Lo que se da por sentado, eventualmente se deteriora."
+  },
+  trabajo: {
+    low:  "Un 1 a 3 en trabajo es una señal que no puede ignorar. Hable con su líder, busque nuevos retos o evalúe si este trabajo sigue alineado con lo que quiere. La inacción también es una decisión — y generalmente la peor.",
+    mid:  "Está funcionando pero no está creciendo. Defina hacia dónde quiere ir en su carrera, identifique las brechas y empiece a cerrarlas. Esperar a que las oportunidades lleguen solas no es una estrategia.",
+    high: "Va bien en su carrera pero no se duerma. Siga construyendo su red, actualizando sus habilidades y siendo visible. Los que llegan arriba no esperan a que los descubran."
+  },
+  relaciones: {
+    low:  "Un 1 a 3 en relaciones es señal de aislamiento. Las personas necesitan conexión genuina — revise si está invirtiendo tiempo en las personas que importan o si la agenda lo está alejando de todos.",
+    mid:  "Tiene relaciones pero no las está nutriendo. Llame a alguien importante esta semana, organice un encuentro, escriba ese mensaje que lleva tiempo postergando. Las amistades se mantienen con acción, no con buenas intenciones.",
+    high: "Sus relaciones van bien. Asegúrese de que son recíprocas y que está rodeado de personas que suman. La calidad de su círculo define en gran parte la calidad de su vida."
+  },
+  salud: {
+    low:  "Un 1 a 3 en salud es la prioridad número uno — sin cuerpo no hay nada más. Deje de postergar. Muévase, duerma, aliméntese mejor y vaya al médico si lleva tiempo evitándolo. Todo lo demás puede esperar.",
+    mid:  "Su salud no está en crisis pero tampoco está bien. Establezca una rutina básica: movimiento, sueño y alimentación. Sin salud, el rendimiento en todas las demás áreas se ve afectado.",
+    high: "Va bien en salud. Ahora optimice — revise si su descanso es de calidad, si su alimentación está alineada con su nivel de actividad y si tiene chequeos médicos al día."
+  }
+};
+
+function getBonnoTip(catId, score) {
+  const tips = BONNO_TIPS[catId];
+  if (!tips) return '';
+  if (score <= 3) return tips.low;
+  if (score <= 6) return tips.mid;
+  return tips.high;
+}
+
 // ── DASHBOARD ─────────────────────────────────────────────
 function renderDashboard() {
   const yearData = getYearData(CURRENT_YEAR);
@@ -557,16 +609,19 @@ function renderDashboard() {
       .slice(0, 3);
 
     sorted.forEach(cat => {
-      const nota = yearData[cat.id]?.notas || '';
+      const tip = getBonnoTip(cat.id, cat.score);
+      const scoreColor = cat.score <= 3 ? 'text-red-400' : cat.score <= 6 ? 'text-yellow-400' : 'text-green-400';
       enfEl.innerHTML += `
-        <div class="flex items-start gap-3 p-3 bg-slate-800 rounded-xl">
-          <span class="material-symbols-outlined text-yellow-400 mt-0.5" style="font-size:20px;">${cat.icon}</span>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between">
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+          <div class="flex items-center gap-3 p-3">
+            <span class="material-symbols-outlined text-yellow-400" style="font-size:20px;">${cat.icon}</span>
+            <div class="flex-1 min-w-0">
               <span class="text-sm font-medium">${cat.label}</span>
-              <span class="text-sm font-bold text-red-400">${cat.score}/10</span>
             </div>
-            ${nota ? `<p class="text-xs text-slate-400 mt-0.5 truncate">${nota}</p>` : ''}
+            <span class="text-sm font-bold ${scoreColor}">${cat.score}/10</span>
+          </div>
+          <div class="px-3 pb-3">
+            <p class="text-xs text-slate-400 italic leading-relaxed border-l-2 border-brand pl-2">${tip}</p>
           </div>
         </div>`;
     });
@@ -590,7 +645,29 @@ function loadEvalForm() {
   container.innerHTML = '';
 
   CATEGORIAS.forEach(cat => {
-    const saved = yearData[cat.id] || { score: 5, notas: '' };
+    const saved = yearData[cat.id] || { score: 5, analisis: [], acciones: [] };
+    const analisis = saved.analisis || [];
+    const acciones = saved.acciones || [{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false}];
+
+    const analisisHTML = analisis.map((a, i) => `
+      <div class="flex items-start gap-2 group" id="analisis-item-${cat.id}-${i}">
+        <span class="text-brand mt-0.5 text-xs">·</span>
+        <p class="text-xs text-slate-300 flex-1">${a}</p>
+        <button onclick="removeAnalisis('${cat.id}',${i})" class="text-slate-600 opacity-0 group-hover:opacity-100 active:opacity-100 text-xs">✕</button>
+      </div>`).join('');
+
+    const accionesHTML = acciones.map((a, i) => `
+      <div class="flex items-center gap-3">
+        <input type="checkbox" id="check-${cat.id}-${i}" ${a.check ? 'checked' : ''}
+          onchange="toggleAccion('${cat.id}',${i})"
+          class="w-5 h-5 rounded accent-green-400 flex-shrink-0 cursor-pointer" />
+        <input type="text" id="accion-${cat.id}-${i}"
+          value="${a.texto}"
+          placeholder="Acción ${i+1}..."
+          class="flex-1 bg-transparent border-b border-slate-700 text-xs text-slate-300 outline-none py-1 ${a.check ? 'line-through text-slate-500' : ''}"
+          onchange="updateAccion('${cat.id}',${i},this.value)" />
+      </div>`).join('');
+
     container.innerHTML += `
       <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800">
         <div class="flex items-center gap-3 mb-4">
@@ -599,25 +676,55 @@ function loadEvalForm() {
           </div>
           <div>
             <p class="font-semibold">${cat.label}</p>
-            <p class="text-xs text-slate-500">Puntaje actual: <span id="score-display-${cat.id}" class="text-brand font-bold">${saved.score}</span>/10</p>
+            <p class="text-xs text-slate-500">Puntaje: <span id="score-display-${cat.id}" class="text-brand font-bold">${saved.score}</span>/10</p>
           </div>
         </div>
+
+        <!-- Slider -->
         <div class="mb-4">
           <div class="flex justify-between text-xs text-slate-600 mb-2">
             <span>1 — Muy bajo</span>
             <span>10 — Excelente</span>
           </div>
           <input type="range" min="1" max="10" value="${saved.score}"
-            id="slider-${cat.id}"
-            oninput="updateScore('${cat.id}', this.value)"
-            class="w-full" />
+            id="slider-${cat.id}" oninput="updateScore('${cat.id}', this.value)" class="w-full" />
           <div class="flex justify-between mt-2">
             ${Array.from({length:10},(_,i)=>`<span class="text-xs ${(i+1)==saved.score?'text-brand font-bold':'text-slate-600'}" id="tick-${cat.id}-${i+1}">${i+1}</span>`).join('')}
           </div>
         </div>
-        <textarea id="notas-${cat.id}"
-          class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-slate-300 outline-none resize-none"
-          rows="2" placeholder="${cat.placeholder}">${saved.notas}</textarea>
+
+        <!-- Toggle análisis/acciones -->
+        <button onclick="toggleEvalPanel('${cat.id}')"
+          class="w-full flex items-center justify-between py-2 px-3 bg-slate-800 rounded-xl mb-0 border border-slate-700 active:opacity-70">
+          <span class="text-xs font-medium text-slate-300">📝 Análisis y Acciones</span>
+          <span class="material-symbols-outlined text-slate-400 transition-transform duration-300" id="eval-chevron-${cat.id}" style="font-size:18px;">expand_more</span>
+        </button>
+
+        <!-- Panel oculto -->
+        <div id="eval-panel-${cat.id}" class="hidden mt-3 space-y-4">
+
+          <!-- Análisis -->
+          <div class="bg-slate-800 rounded-xl p-3">
+            <p class="text-xs font-semibold text-brand mb-2">📊 Mi Análisis <span class="text-slate-500 font-normal">(${analisis.length}/5)</span></p>
+            <div id="analisis-list-${cat.id}" class="space-y-1 mb-2 min-h-4">
+              ${analisisHTML}
+            </div>
+            ${analisis.length < 5 ? `
+            <input type="text" id="analisis-input-${cat.id}"
+              placeholder="Escribe y presiona Enter..."
+              class="w-full bg-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none border border-slate-600"
+              onkeydown="addAnalisis(event,'${cat.id}')" />` : `<p class="text-xs text-slate-500 italic">Máximo 5 análisis alcanzado</p>`}
+          </div>
+
+          <!-- Acciones -->
+          <div class="bg-slate-800 rounded-xl p-3">
+            <p class="text-xs font-semibold text-brand mb-3">✅ Mis Acciones</p>
+            <div class="space-y-3">
+              ${accionesHTML}
+            </div>
+          </div>
+
+        </div>
       </div>`;
   });
 }
@@ -636,14 +743,95 @@ function saveEvaluation() {
   if (!data[year]) data[year] = {};
 
   CATEGORIAS.forEach(cat => {
+    const existing = data[year][cat.id] || {};
     data[year][cat.id] = {
       score: parseInt(document.getElementById('slider-' + cat.id).value),
-      notas: document.getElementById('notas-' + cat.id).value.trim()
+      analisis: existing.analisis || [],
+      acciones: existing.acciones || [{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false},{texto:'',check:false}]
     };
+    // Save acciones text from inputs
+    for (let i = 0; i < 5; i++) {
+      const input = document.getElementById(`accion-${cat.id}-${i}`);
+      const check = document.getElementById(`check-${cat.id}-${i}`);
+      if (input) data[year][cat.id].acciones[i] = { texto: input.value, check: check ? check.checked : false };
+    }
   });
 
   setData(data);
   showToast('✓ Evaluación ' + year + ' guardada');
+}
+
+function toggleEvalPanel(catId) {
+  const panel = document.getElementById('eval-panel-' + catId);
+  const chevron = document.getElementById('eval-chevron-' + catId);
+  const isHidden = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !isHidden);
+  chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function addAnalisis(event, catId) {
+  if (event.key !== 'Enter') return;
+  const input = document.getElementById('analisis-input-' + catId);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const year = parseInt(document.getElementById('eval-year-select').value);
+  const data = getData();
+  if (!data[year]) data[year] = {};
+  if (!data[year][catId]) data[year][catId] = { score: 5, analisis: [], acciones: [] };
+  if (!data[year][catId].analisis) data[year][catId].analisis = [];
+  if (data[year][catId].analisis.length >= 5) return;
+
+  data[year][catId].analisis.push(text);
+  setData(data);
+  input.value = '';
+  loadEvalForm();
+  // Re-open the panel
+  setTimeout(() => {
+    const panel = document.getElementById('eval-panel-' + catId);
+    const chevron = document.getElementById('eval-chevron-' + catId);
+    if (panel) { panel.classList.remove('hidden'); chevron.style.transform = 'rotate(180deg)'; }
+  }, 50);
+}
+
+function removeAnalisis(catId, index) {
+  const year = parseInt(document.getElementById('eval-year-select').value);
+  const data = getData();
+  if (data[year]?.[catId]?.analisis) {
+    data[year][catId].analisis.splice(index, 1);
+    setData(data);
+    loadEvalForm();
+    setTimeout(() => {
+      const panel = document.getElementById('eval-panel-' + catId);
+      const chevron = document.getElementById('eval-chevron-' + catId);
+      if (panel) { panel.classList.remove('hidden'); chevron.style.transform = 'rotate(180deg)'; }
+    }, 50);
+  }
+}
+
+function toggleAccion(catId, index) {
+  const year = parseInt(document.getElementById('eval-year-select').value);
+  const data = getData();
+  if (!data[year]) data[year] = {};
+  if (!data[year][catId]) data[year][catId] = { score: 5, analisis: [], acciones: [] };
+  if (!data[year][catId].acciones) data[year][catId].acciones = [];
+  const check = document.getElementById(`check-${catId}-${index}`);
+  const input = document.getElementById(`accion-${catId}-${index}`);
+  if (!data[year][catId].acciones[index]) data[year][catId].acciones[index] = { texto: '', check: false };
+  data[year][catId].acciones[index].check = check.checked;
+  if (input) { input.className = input.className.replace('line-through text-slate-500','').replace('text-slate-300',''); input.className += check.checked ? ' line-through text-slate-500' : ' text-slate-300'; }
+  setData(data);
+}
+
+function updateAccion(catId, index, value) {
+  const year = parseInt(document.getElementById('eval-year-select').value);
+  const data = getData();
+  if (!data[year]) data[year] = {};
+  if (!data[year][catId]) data[year][catId] = { score: 5, analisis: [], acciones: [] };
+  if (!data[year][catId].acciones) data[year][catId].acciones = [];
+  if (!data[year][catId].acciones[index]) data[year][catId].acciones[index] = { texto: '', check: false };
+  data[year][catId].acciones[index].texto = value;
+  setData(data);
 }
 
 // ── ANÁLISIS ──────────────────────────────────────────────
